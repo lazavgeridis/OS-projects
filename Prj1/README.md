@@ -14,8 +14,8 @@ size of the graph can change dynamically.
 
 ###### examples
 "Bob"->1500->"Liz"(1): transaction between bucket node "Bob" and adjacent node "Liz" with weight 1500  
-"Bob"->700->"Liz" could also exist and even
-"Bob"->1500->"Liz"(2) is also valid  
+"Bob"->700->"Liz" could also exist and even  
+"Bob"->1500->"Liz"(2) is valid  
 
 Here is the list of the prompt interface commands:
 
@@ -41,7 +41,7 @@ Here is the list of the prompt interface commands:
   `c Ni`  
    i.e   **_Ni_->w1->A->w2->B->w3->_Ni_**
 
-- to find if "Ni" is involved in *cyclic transactions* with other accounts: 
+- to find if "Ni" is involved in *cyclic transactions* with other accounts:  
   `f Ni k`  
   k is the minimum weight each outgoing edge can have  
   i.e   (min.weight 100)  **_Ni_->200->A->150->B->707->Ni->360->C->102->_Ni_**
@@ -53,8 +53,8 @@ Here is the list of the prompt interface commands:
   ## Execution  
   ```
   $ make
-  $ ./mygraph -i TestData-Prj1-F18/InputFile-Small.csv -o mysmall ( < workloads/Small/workload-Small > mysmall_out )  
-
+  $ ./mygraph -i TestData-Prj1-F18/InputFile-Small.csv -o mysmall ( < workloads/Small/workload-Small > mysmall_out )
+ 
   ```
-  where after the -i flag is the input file for the graph creation, after -o is the output file where the final 
+  where after the -i flag is the input file for the graph creation, after the -o flag is the output file where the final 
   state of the graph will be printed out. The part inside the parentheses is optional. 
