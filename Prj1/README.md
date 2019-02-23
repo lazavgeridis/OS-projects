@@ -53,8 +53,7 @@ Here is the list of the prompt interface commands:
   ## Execution  
   ```
   $ make
-  $ ./mygraph -i TestData-Prj1-F18/InputFile-Small.csv -o mysmall ( < workloads/Small/workload-Small > mysmall_out )
- 
+  $ ./mygraph -i TestData-Prj1-F18/InputFile-Small.csv -o mysmall ( < workloads/Small/workload-Small > mysmall_out )  
   ```
   where after the -i flag is the input file for the graph creation, after the -o flag is the output file where the final 
   state of the graph will be printed out. The part inside the parentheses is optional. 
