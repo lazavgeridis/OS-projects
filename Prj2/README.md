@@ -18,7 +18,7 @@ $ make
 $ ./myfind -h Height -d Data4Project2/*.bin -p Pattern (-s)
 
 ```
-where *Height* is the height of the complete binary tree(**max value is 5 and min value is 1**), after the -d flag is the binary datafile, *Pattern* is the (sub-)string we are searching for and the *-s* flag is optional. This flag declares that the searcher processes will not be given equal search ranges. For instance, assuming *2^h* searchers and a Datafile of *k* records, each searcher gets to search: k * i / &sum;n(from n = 1 to 2^h) records, where i is the number of the searcher process. On the other hand, the absence of the *-s* flag indicates that every searcher gets to search the same number of records: k / 2^h.
+where *Height* is the height of the complete binary tree(**max value is 5 and min value is 1**), after the -d flag is the binary datafile, *Pattern* is the (sub-)string we are searching for and the *-s* flag is optional. This flag declares that the searcher processes will not be given equal search ranges. For instance, assuming *$2^h$* searchers and a Datafile of *k* records, each searcher gets to search: k * i / &sum;n(from n = 1 to 2^h) records, where i is the number of the searcher process. On the other hand, the absence of the *-s* flag indicates that every searcher gets to search the same number of records: k / 2^h.
 
 
 
