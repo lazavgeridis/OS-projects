@@ -333,15 +333,13 @@ int main(int argc, char *argv[]) {
 	sem_wait(port_mutex);
 
 	sem_wait(mutex);
-
-	/* vessel writes to exit_info its name,type,upgrade type,time it left its parking space, and total cost */
-	strcpy(shared_mem->exit_info.name, argv[11]);
-	shared_mem->exit_info.parkspace = space_to_park;
-	shared_mem->exit_info.primary_type = primary_type;
-	shared_mem->exit_info.upgrade_type = upgrade_type;
-	shared_mem->exit_info.left_space = space_departure;
-	shared_mem->exit_info.v_cost = v_cost;
-
+		/* vessel writes to exit_info its name,type,upgrade type,time it left its parking space, and total cost */
+		strcpy(shared_mem->exit_info.name, argv[11]);
+		shared_mem->exit_info.parkspace = space_to_park;
+		shared_mem->exit_info.primary_type = primary_type;
+		shared_mem->exit_info.upgrade_type = upgrade_type;
+		shared_mem->exit_info.left_space = space_departure;
+		shared_mem->exit_info.v_cost = v_cost;
 	sem_post(mutex);
 
 	/* P(examine_exiting) after vessel has written its exit info in shared memory */
