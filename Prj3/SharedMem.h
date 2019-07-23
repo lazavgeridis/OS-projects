@@ -1,3 +1,8 @@
+#ifndef SHARED_MEM_H
+#define SHARED_MEM_H
+
+#define MAXLONG 2147483647
+
 #include <time.h>
 
 typedef enum {small, medium, large} type;
@@ -111,3 +116,4 @@ typedef struct shared_memory {
 
 }SharedMemory;
 
+#endif

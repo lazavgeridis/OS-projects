@@ -16,8 +16,14 @@ myportImplementation.o:	myportImplementation.c
 vessel: vessel.c SharedMem.h
 	$(CC) -pthread -o vessel vessel.c $(CFLAGS)
 
-port_master: port_master.c SharedMem.h
-	$(CC) -pthread -o port_master port_master.c $(CFLAGS)
+port_master: port_master.o port_master_utils.o 
+	$(CC) -pthread -o port_master port_master.o port_master_utils.o $(CFLAGS)
+
+port_master.o: port_master.c SharedMem.h port_master_utils.h
+	$(CC) -c port_master.c $(CFLAGS)
+
+port_master_utils.o: port_master_utils.c
+	$(CC) -c port_master_utils.c $(CFLAGS)
 
 monitor: monitor.c SharedMem.h
 	$(CC) -pthread -o monitor monitor.c $(CFLAGS)
@@ -25,4 +31,4 @@ monitor: monitor.c SharedMem.h
 
 
 clean:
-	rm myport vessel port_master monitor myport.o myportImplementation.o
+	rm myport vessel port_master monitor myport.o port_master.o myportImplementation.o port_master_utils.o

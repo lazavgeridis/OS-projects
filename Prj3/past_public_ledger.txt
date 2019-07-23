@@ -1,0 +1,400 @@
+Vessel Name:Vessel_0
+Arrival Time:1563889446
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:300
+Departure Time:1563889452
+
+Vessel Name:Vessel_2
+Arrival Time:1563889452
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1440
+Departure Time:1563889464
+
+Vessel Name:Vessel_13
+Arrival Time:1563889468
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:450
+Departure Time:1563889477
+
+Vessel Name:Vessel_17
+Arrival Time:1563889458
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1800
+Departure Time:1563889482
+
+Vessel Name:Vessel_3
+Arrival Time:1563889478
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1080
+Departure Time:1563889487
+
+Vessel Name:Vessel_18
+Arrival Time:1563889484
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:600
+Departure Time:1563889496
+
+Vessel Name:Vessel_6
+Arrival Time:1563889506
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:600
+Departure Time:1563889518
+
+Vessel Name:Vessel_27
+Arrival Time:1563889518
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:150
+Departure Time:1563889521
+
+Vessel Name:Vessel_4
+Arrival Time:1563889522
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1800
+Departure Time:1563889537
+
+Vessel Name:Vessel_33
+Arrival Time:1563889540
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:150
+Departure Time:1563889543
+
+Vessel Name:Vessel_26
+Arrival Time:1563889544
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:600
+Departure Time:1563889556
+
+Vessel Name:Vessel_1
+Arrival Time:1563889560
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:360
+Departure Time:1563889563
+
+Vessel Name:Vessel_8
+Arrival Time:1563889566
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1125
+Departure Time:1563889581
+
+Vessel Name:Vessel_43
+Arrival Time:1563889558
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1200
+Departure Time:1563889582
+
+Vessel Name:Vessel_25
+Arrival Time:1563889576
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1080
+Departure Time:1563889585
+
+Vessel Name:Vessel_24
+Arrival Time:1563889574
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1200
+Departure Time:1563889598
+
+Vessel Name:Vessel_32
+Arrival Time:1563889587
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1350
+Departure Time:1563889605
+
+Vessel Name:Vessel_40
+Arrival Time:1563889603
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:600
+Departure Time:1563889615
+
+Vessel Name:Vessel_10
+Arrival Time:1563889611
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1080
+Departure Time:1563889620
+
+Vessel Name:Vessel_30
+Arrival Time:1563889643
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:450
+Departure Time:1563889649
+
+Vessel Name:Vessel_20
+Arrival Time:1563889639
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1200
+Departure Time:1563889663
+
+Vessel Name:Vessel_16
+Arrival Time:1563889657
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1080
+Departure Time:1563889666
+
+Vessel Name:Vessel_34
+Arrival Time:1563889651
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1050
+Departure Time:1563889672
+
+Vessel Name:Vessel_36
+Arrival Time:1563889671
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:150
+Departure Time:1563889674
+
+Vessel Name:Vessel_45
+Arrival Time:1563889663
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1350
+Departure Time:1563889681
+
+Vessel Name:Vessel_37
+Arrival Time:1563889683
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:720
+Departure Time:1563889689
+
+Vessel Name:Vessel_5
+Arrival Time:1563889711
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1050
+Departure Time:1563889732
+
+Vessel Name:Vessel_22
+Arrival Time:1563889715
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:900
+Departure Time:1563889733
+
+Vessel Name:Vessel_29
+Arrival Time:1563889723
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:2520
+Departure Time:1563889744
+
+Vessel Name:Vessel_42
+Arrival Time:1563889721
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:900
+Departure Time:1563889733
+
+Vessel Name:Vessel_35
+Arrival Time:1563889744
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1200
+Departure Time:1563889768
+
+Vessel Name:Vessel_19
+Arrival Time:1563889762
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:1080
+Departure Time:1563889771
+
+Vessel Name:Vessel_28
+Arrival Time:1563889760
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:750
+Departure Time:1563889775
+
+Vessel Name:Vessel_47
+Arrival Time:1563889766
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1350
+Departure Time:1563889784
+
+Vessel Name:Vessel_11
+Arrival Time:1563889778
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:900
+Departure Time:1563889796
+
+Vessel Name:Vessel_14
+Arrival Time:1563889800
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:360
+Departure Time:1563889803
+
+Vessel Name:Vessel_31
+Arrival Time:1563889792
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:1050
+Departure Time:1563889813
+
+Vessel Name:Vessel_44
+Arrival Time:1563889818
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:675
+Departure Time:1563889827
+
+Vessel Name:Vessel_12
+Arrival Time:1563889832
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:300
+Departure Time:1563889838
+
+Vessel Name:Vessel_21
+Arrival Time:1563889838
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:360
+Departure Time:1563889841
+
+Vessel Name:Vessel_15
+Arrival Time:1563889848
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:150
+Departure Time:1563889851
+
+Vessel Name:Vessel_38
+Arrival Time:1563889866
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:360
+Departure Time:1563889869
+
+Vessel Name:Vessel_23
+Arrival Time:1563889856
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1575
+Departure Time:1563889877
+
+Vessel Name:Vessel_46
+Arrival Time:1563889862
+Parking Space:Small
+Vessel Type:Small
+Vessel Status:departed
+Total Cost:750
+Departure Time:1563889877
+
+Vessel Name:Vessel_48
+Arrival Time:1563889881
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:360
+Departure Time:1563889884
+
+Vessel Name:Vessel_39
+Arrival Time:1563889893
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1350
+Departure Time:1563889911
+
+Vessel Name:Vessel_9
+Arrival Time:1563889907
+Parking Space:Large
+Vessel Type:Large
+Vessel Status:departed
+Total Cost:2880
+Departure Time:1563889931
+
+Vessel Name:Vessel_7
+Arrival Time:1563889923
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:675
+Departure Time:1563889932
+
+Vessel Name:Vessel_41
+Arrival Time:1563889941
+Parking Space:Large
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:1440
+Departure Time:1563889953
+
+Vessel Name:Vessel_49
+Arrival Time:1563889955
+Parking Space:Medium
+Vessel Type:Medium
+Vessel Status:departed
+Total Cost:450
+Departure Time:1563889961
+

@@ -13,8 +13,8 @@
 #include <signal.h>
 
 #include "SharedMem.h"
+#include "port_master_utils.h"
 
-#define MAXLONG 2147483647
 
 volatile sig_atomic_t exit_signal = 0;
 void sig_handler(int signum) { exit_signal = 1; }
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
 	sem_t *small_large_queue = sem_open("/small_large_queue", 0);
 	sem_t *medium_large_queue = sem_open("/medium_large_queue", 0);
 	sem_t *large_queue = sem_open("/large_queue", 0);
+	sem_t *inform_vessel = sem_open("/inform_vessel", 0);
 
 	fp1 = fopen(shared_mem->public_ledger, "w");
 	if(fp1 == NULL) {
@@ -73,12 +74,11 @@ int main(int argc, char *argv[]) {
 	while(exit_signal == 0) {
 
 
-		/* port master "sleeps" until a pending vessel shows up - avoid busy waiting */
+
+		/* Port master "sleeps" until a pending vessel shows up - avoid busy waiting */
 		sem_wait(pending_vessel);
 
-
-		/* if there are vessels waiting to exit the port */
-		if(shared_mem->ready_to_exit > 0) {
+		if(shared_mem->ready_to_exit > 0) {	/* If there are vessels waiting to exit the port... */
 
 			sem_post(port_master_exit);
 
@@ -94,19 +94,15 @@ int main(int argc, char *argv[]) {
 					if(shared_mem->s_array[i].vessel_status == idle)
 						if(strcmp(shared_mem->s_array[i].name, shared_mem->exit_info.name) == 0)  {
 							sem_wait(mutex);
-
-							shared_mem->s_array[i].vessel_status = departed;
-							shared_mem->s_array[i].depart_time = shared_mem->exit_info.left_space;
-							++shared_mem->s_spaces;
-
+								shared_mem->s_array[i].vessel_status = departed;
+								shared_mem->s_array[i].depart_time = shared_mem->exit_info.left_space;
+								++shared_mem->s_spaces;
 							sem_post(mutex);
 							flag = small;
-							break;
 
+							break;
 						}
 				}
-
-				
 			}
 			else {
 				if(shared_mem->exit_info.parkspace == medium) {
@@ -116,31 +112,28 @@ int main(int argc, char *argv[]) {
 						if(shared_mem->m_array[i].vessel_status == idle)
 							if(strcmp(shared_mem->m_array[i].name, shared_mem->exit_info.name) == 0)  {
 								sem_wait(mutex);
-
-								shared_mem->m_array[i].vessel_status = departed;
-								shared_mem->m_array[i].depart_time = shared_mem->exit_info.left_space;
-								++shared_mem->m_spaces;
-
+									shared_mem->m_array[i].vessel_status = departed;
+									shared_mem->m_array[i].depart_time = shared_mem->exit_info.left_space;
+									++shared_mem->m_spaces;
 								sem_post(mutex);
 								flag = medium;
+
 								break;
 							}
 					}
-
 				}
-				else	{
+				else{
 					/* if it reached that far, vessel's type in exit info must be large */
 					for(i = 0; i < shared_mem->l_capacity; ++i)  {
 						if(shared_mem->l_array[i].vessel_status == idle)
 							if(strcmp(shared_mem->l_array[i].name, shared_mem->exit_info.name) == 0)  {
 								sem_wait(mutex);
-
-								shared_mem->l_array[i].vessel_status = departed;
-								shared_mem->l_array[i].depart_time = shared_mem->exit_info.left_space;
-								++shared_mem->l_spaces;
-
+									shared_mem->l_array[i].vessel_status = departed;
+									shared_mem->l_array[i].depart_time = shared_mem->exit_info.left_space;
+									++shared_mem->l_spaces;
 								sem_post(mutex);
 								flag = large;
+
 								break;
 							}
 					}
@@ -189,7 +182,7 @@ int main(int argc, char *argv[]) {
 			/* If the type of parking spaces that was incremented was previously 0, port master should perform V() on a semaphore queue 
 			 * which includes this vessel type and also includes the vessel with the longest waiting time */
 
-			/* if one small parking space became available, while previously all the small spaces were occupied: */
+			/* if one SMALL parking space became available, while previously all the small spaces were occupied: */
 			if( (flag == small) && (shared_mem->s_spaces == 1) ) {
 
 				min1 = MAXLONG;
@@ -200,170 +193,138 @@ int main(int argc, char *argv[]) {
 				 */
 				if(shared_mem->sm_count > 0) {
 					
-					/* small_medium_queue semaphore has vessels blocked on it */
-					/* find the longest waiting time(= min element) */
-					min1 = shared_mem->sm_array[0];
-					for(i = 0; i < 30; ++i) {
-						if(shared_mem->sm_array[i] < min1)
-							min1 = shared_mem->sm_array[i];
-					}
+					/* small_medium_queue semaphore has vessels blocked on it 
+					 * find the longest waiting time(= min element) 
+					 */
+					min1 = find_min(shared_mem->sm_array);
 				}
 				if(shared_mem->sl_count > 0) {
 
-					/* small_large semaphore queue has vessels blocked on it */
-					/* find the longest waiting time(= min element) */
-					min2 = shared_mem->sl_array[0];
-					for(i = 0; i < 30; ++i) {
-						if(shared_mem->sl_array[i] < min2)
-							min2 = shared_mem->sl_array[i];
-					}
-
+					/* small_large semaphore queue has vessels blocked on it 
+					 * find the longest waiting time(= min element) 
+					 */
+					min2 = find_min(shared_mem->sl_array);
 				}
 				if( (min1 != MAXLONG) || (min2 != MAXLONG) ) {
+
 					/* at this point port master should compare the 2 min's and decide on which semaphore queue it will perform V() on */
 					if(min1 < min2) {
 
 						/* V(small_medium) */
 						sem_wait(mutex);
-
-						sem_post(small_medium_queue);
-						--shared_mem->sm_count;
-						shared_mem->space_to_park = small;
-						--shared_mem->s_spaces;
-						shared_mem->last_decr = small;
-
+							sem_post(small_medium_queue);
+							--shared_mem->sm_count;
+							shared_mem->space_to_park = small;
+							--shared_mem->s_spaces;
+							shared_mem->last_decr = small;
 						sem_post(mutex);
 					}
 					else {
 						/* V(small_large) */
 						sem_wait(mutex);
-
-						sem_post(small_large_queue);
-						--shared_mem->sl_count;
-						shared_mem->space_to_park = small;
-						--shared_mem->s_spaces;
-						shared_mem->last_decr = small;
-
-
+							sem_post(small_large_queue);
+							--shared_mem->sl_count;
+							shared_mem->space_to_park = small;
+							--shared_mem->s_spaces;
+							shared_mem->last_decr = small;
 						sem_post(mutex);
 					}
 				}
 			}
-			else
-				/* if one medium space became available, while previusly all the medium spaces were occupied */
+			else {
+				/* if one medium space became available, while previously all the medium spaces were occupied */
 				if( (flag == medium) && (shared_mem->m_spaces == 1) ) {
 
 					min1 = MAXLONG;
 					min2 = MAXLONG;
 
-					/* candidate semaphore queues are: small_medium, medium_large */
-					/* of course these semaphores should have some vessels blocked on them */
+					/* candidate semaphore queues are: small_medium, medium_large
+					 * of course these semaphores should have some vessels blocked on them 
+					 */
 					if(shared_mem->sm_count > 0) {
 						
-						/* small_medium semaphore queue has vessels blocked on it */
-						/* find the longest waiting time(= min element) */
-						min1 = shared_mem->sm_array[0];
-						for(i = 0; i < 30; ++i) {
-							if(shared_mem->sm_array[i] < min1)
-								min1 = shared_mem->sm_array[i];
-						}
+						/* small_medium semaphore queue has vessels blocked on it,
+						 * find the longest waiting time(= min element) 
+						 */
+						min1 = find_min(shared_mem->sm_array);
 					}
 					if(shared_mem->ml_count > 0) {
 
-						/* medium_large semaphore queue has vessels blocked on it */
-						/* find the longest waiting time(= min element) */
-						min2 = shared_mem->ml_array[0];
-						for(i = 0; i < 30; ++i) {
-							if(shared_mem->ml_array[i] < min2)
-								min2 = shared_mem->ml_array[i];
-						}
-
+						/* medium_large semaphore queue has vessels blocked on it,
+						 * find the longest waiting time(= min element) 
+						 */
+						min2 = find_min(shared_mem->ml_array);
 					}
 					if( (min1 != MAXLONG) || (min2 != MAXLONG) ) {
-						/* at this point port master should compare the 2 min's and decide on which semaphore queue it will perform V() on */
+
+						/* port master should compare the 2 min's and decide on which semaphore queue it will perform V() on */
 						if(min1 < min2) {
 
 							/* V(small_medium) */
 							sem_wait(mutex);
-
-							sem_post(small_medium_queue);
-							--shared_mem->sm_count;
-							shared_mem->space_to_park = medium;
-							--shared_mem->m_spaces;
-							shared_mem->last_decr = medium;
-
-
+								sem_post(small_medium_queue);
+								--shared_mem->sm_count;
+								shared_mem->space_to_park = medium;
+								--shared_mem->m_spaces;
+								shared_mem->last_decr = medium;
 							sem_post(mutex);
 						}
 						else {
 							/* V(medium_large) */
 							sem_wait(mutex);
-
-							sem_post(medium_large_queue);
-							--shared_mem->ml_count;
-							shared_mem->space_to_park = medium;
-							--shared_mem->m_spaces;
-							shared_mem->last_decr = medium;
-
+								sem_post(medium_large_queue);
+								--shared_mem->ml_count;
+								shared_mem->space_to_park = medium;
+								--shared_mem->m_spaces;
+								shared_mem->last_decr = medium;
 							sem_post(mutex);
 						}
 					}
 				}
-				else
-					/* if one large space became available, while previously all the large spaces were occupied*/
+				else {
+					/* if one large space became available, while previously all the large spaces were occupied */
 					if( (flag == large) && (shared_mem->l_spaces == 1) ) {
 
 						min1 = MAXLONG;
 						min2 = MAXLONG;
 						min3 = MAXLONG;
 
-						/* candidate semaphore queues are: small_large, medium_large, large */
-						/* of course these semaphores should have some vessels blocked on them */
+						/* candidate semaphore queues are: small_large, medium_large, large 
+						 * of course these semaphores should have some vessels blocked on them 
+						 */
 						if(shared_mem->sl_count > 0) {
 							
-							/* small_large semaphore queue has vessels blocked on it */
-							/* find the longest waiting time(= min element) */
-							min1 = shared_mem->sl_array[0];
-							for(i = 0; i < 30; ++i) {
-								if(shared_mem->sl_array[i] < min1)
-									min1 = shared_mem->sl_array[i];
-							}
+							/* small_large semaphore queue has vessels blocked on it 
+							 * find the longest waiting time(= min element) 
+							 */
+							min1 = find_min(shared_mem->sl_array);
 						}
 						if(shared_mem->ml_count > 0) {
 
-							/* medium_large semaphore queue has vessels blocked on it */
-							/* find the longest waiting time(= min element) */
-							min2 = shared_mem->ml_array[0];
-							for(i = 0; i < 30; ++i) {
-								if(shared_mem->ml_array[i] < min2)
-									min2 = shared_mem->ml_array[i];
-							}
-
+							/* medium_large semaphore queue has vessels blocked on it 
+							 * find the longest waiting time(= min element) 
+							 */
+							min2 = find_min(shared_mem->ml_array);
 						}
 						if(shared_mem->l_count > 0) {
 
-							/* large semaphore queue has vessels blocked on it */
-							/* find the longest waiting time(= min element) */
-							min3 = shared_mem->lrg_array[0];
-							for(i = 0; i < 30; ++i) {
-								if(shared_mem->lrg_array[i] < min3)
-									min3 = shared_mem->lrg_array[i];
-							}
-
+							/* large semaphore queue has vessels blocked on it 
+							 * find the longest waiting time(= min element) 
+							 */
+							min3 = find_min(shared_mem->lrg_array);
 						}
 						if( (min1 != MAXLONG) || (min2 != MAXLONG) || (min3 != MAXLONG) ) {
-						/* at this point port master should compare the 3 min's and decide on which semaphore queue it will perform V() on */
+
+							/* port master should compare the 3 min's and decide on which semaphore queue it will perform V() on */
 							if( (min1 < min2) && (min1 < min3) ) {
 
 								/* V(small_large) */
 								sem_wait(mutex);
-
-								sem_post(small_large_queue);
-								--shared_mem->sl_count;
-								shared_mem->space_to_park = large;
-								--shared_mem->l_spaces;
-								shared_mem->last_decr = large;
-
+									sem_post(small_large_queue);
+									--shared_mem->sl_count;
+									shared_mem->space_to_park = large;
+									--shared_mem->l_spaces;
+									shared_mem->last_decr = large;
 								sem_post(mutex);
 							}
 							else 
@@ -371,54 +332,49 @@ int main(int argc, char *argv[]) {
 
 									/* V(medium_large) */
 									sem_wait(mutex);
-
-									sem_post(medium_large_queue);
-									--shared_mem->ml_count;
-									shared_mem->space_to_park = large;
-									--shared_mem->l_spaces;
-									shared_mem->last_decr = large;
-
+										sem_post(medium_large_queue);
+										--shared_mem->ml_count;
+										shared_mem->space_to_park = large;
+										--shared_mem->l_spaces;
+										shared_mem->last_decr = large;
 									sem_post(mutex);
 								}
 								else {
 									/* V(large_queue) */
 									sem_wait(mutex);
-
-									sem_post(large_queue);
-									--shared_mem->l_count;
-									shared_mem->space_to_park = large;
-									--shared_mem->l_spaces;
-									shared_mem->last_decr = large;
-
+										sem_post(large_queue);
+										--shared_mem->l_count;
+										shared_mem->space_to_park = large;
+										--shared_mem->l_spaces;
+										shared_mem->last_decr = large;
 									sem_post(mutex);
 								}
 						}
 					}
+				}
+			}
 
 
 			/* port-master should also decrement the number of vessels that are ready to exit the port */	
 			sem_wait(mutex);
-			--shared_mem->ready_to_exit;
-			printf("%s departed from its parking space at %ld paying a total of %d\n\n", shared_mem->exit_info.name, \
-													shared_mem->exit_info.left_space, \
-													shared_mem->exit_info.v_cost);
+				--shared_mem->ready_to_exit;
 			sem_post(mutex);
 
-			/*test*/printf("Pm: s:%d m:%d l:%d\n", shared_mem->s_spaces, shared_mem->m_spaces, shared_mem->l_spaces);
-
 			++counter;
-			printf("Number of vessels that have exited the port so far is %d\n", counter);
 
-			printf("Pm: sm:%d sl:%d ml:%d l:%d\n", shared_mem->sm_count, shared_mem->sl_count, shared_mem->ml_count, shared_mem->l_count);
-			/* increment port's money */
+			printf("\n-> Number of vessels that have exited the port so far is %d\n", counter);
+			printf("-> (Port-Master): Available Parking Spaces: Small:%d \t Medium:%d \t Large:%d\n", shared_mem->s_spaces, shared_mem->m_spaces, \
+															shared_mem->l_spaces);
+			printf("-> (Port-Master): Vessels Waiting: Small-Medium:%d \t Small-Large:%d \t Medium-Large:%d \t Large:%d\n\n", shared_mem->sm_count, \
+												shared_mem->sl_count, shared_mem->ml_count, shared_mem->l_count);
+
+			/* increment port's income */
 			shared_mem->total_money += shared_mem->exit_info.v_cost;
-
-
 		}
 
 		else
-			/* If there are vessels waiting to be acknowledged by the port master and therefore wish to enter the port.
-			 * The port master also checks on which semaphore queue should he perform V(), assuming there are available parking spaces */
+			/* If there are vessels waiting to be acknowledged by the port master and therefore wish to enter the port...
+			 * The port master also checks on which semaphore queue should he perform V() on, assuming there are available parking spaces */
 			if(shared_mem->waiting_pm > 0) { 
 
 				sem_post(port_master);
@@ -443,44 +399,27 @@ int main(int argc, char *argv[]) {
 
 
 				/* find the smallest element(time) from each array: small->medium, small->large, medium->large, large */
-				if(shared_mem->sm_count > 0) {
-					min1 = shared_mem->sm_array[0];
-					for(i = 1; i < 30; ++i) {
-						if(shared_mem->sm_array[i] < min1)
-							min1 = shared_mem->sm_array[i];
-					}
-				}
+
+				if(shared_mem->sm_count > 0) 
+					min1 = find_min(shared_mem->sm_array);
 				else
 					min1 = MAXLONG;
 
-				if(shared_mem->sl_count > 0) {
-					min2 = shared_mem->sl_array[0];
-					for(i = 1; i < 30; ++i) {
-						if(shared_mem->sl_array[i] < min2)
-							min2 = shared_mem->sl_array[i];
-					}
-				}
+
+				if(shared_mem->sl_count > 0) 
+					min2 = find_min(shared_mem->sl_array);
 				else
 					min2 = MAXLONG;
 
-				if(shared_mem->ml_count > 0) {
-					min3 = shared_mem->ml_array[0];
-					for(i = 1; i < 30; ++i) {
-						if(shared_mem->ml_array[i] < min3)
-							min3 = shared_mem->ml_array[i];
-					}
-				}
+
+				if(shared_mem->ml_count > 0)
+					min3 = find_min(shared_mem->ml_array);
 				else
 					min3 = MAXLONG;
 
-				if(shared_mem->l_count > 0) {
-					/* find min */
-					min4 = shared_mem->lrg_array[0];
-					for(i = 1; i < 30; ++i) {
-						if(shared_mem->lrg_array[i] < min4)
-							min4 = shared_mem->lrg_array[i];
-					}
-				}
+
+				if(shared_mem->l_count > 0)
+					min4 = find_min(shared_mem->lrg_array);
 				else
 					min4 = MAXLONG;
 
@@ -512,184 +451,85 @@ int main(int argc, char *argv[]) {
 
 				/* In general, when an empty parking space is encountered, port-master must choose a vessel to "fill" it with,
 				 * even if that vessel does not have the highest "priority"( = has waited the longest)
+				 * e.g: if a small parking space becomes empty after a small vessel departed, and the 1st vessel in the "queue" is NOT a small
+				 * 	we must still find the small vessel with the highest priority in the "queue", wake it up, and make it park
+				 * 	to this small parking space that was just left empty. 
 				 */ 
 
-				if( (total_min == min1) && (total_min != MAXLONG) ) {		
-					/* min1 -> small_medium_queue semaphore */
-					if( (shared_mem->s_spaces > 0) || (shared_mem->m_spaces > 0) ) {
+				if( (total_min == min1) && (total_min != MAXLONG) ) { 	/* min1 -> small_medium_queue semaphore */		
 
-						if(shared_mem->s_spaces > 0) {
-							sem_wait(mutex);
-								sem_post(small_medium_queue); /* V() the semaphore */
-								--shared_mem->sm_count;	      /* decrement number of vessels blocked on this semaphore */
-								--shared_mem->s_spaces;	      /* decrement available small parking spaces */
-								shared_mem->space_to_park = small; /* "show" to the vessel that got unblocked, its parking space */
-								shared_mem->last_decr = small; /* ?????????? */
-							sem_post(mutex);
-						}
-						else {
-							sem_wait(mutex);
-								sem_post(small_medium_queue);
-								--shared_mem->sm_count;
-								--shared_mem->m_spaces;
-								shared_mem->space_to_park = medium;
-								shared_mem->last_decr = medium;
-							sem_post(mutex);
-						}							
+					if( (shared_mem->s_spaces > 0) || (shared_mem->m_spaces > 0) ) { /* If there are small or medium parking spaces available */
+						park_small_medium(shared_mem, mutex, small_medium_queue);	
+
+						sem_wait(inform_vessel); /* ++ */
 					}
-					else {
-						/* If only large parking spaces are available, candidate semaphore queues to perform V() on are:
-						 * small_large, medium_large, large */
-						total_min = min_arr[1];	
-						if( (total_min == min2) && (total_min != MAXLONG) ) {
-							sem_wait(mutex);
-								sem_post(small_large_queue);
-								--shared_mem->sl_count;
-								--shared_mem->l_spaces;
-								shared_mem->space_to_park = large;
-								shared_mem->last_decr = large;
-							sem_post(mutex);
-						}
-						else
-							if( (total_min == min3) && (total_min != MAXLONG) ) {
-								sem_wait(mutex);
-									sem_post(medium_large_queue);
-									--shared_mem->ml_count;
-									--shared_mem->l_spaces;
-									shared_mem->last_decr = large;
-									shared_mem->space_to_park = large;
-								sem_post(mutex);
-							}
-							else {
-								if(total_min != MAXLONG) {
-									sem_wait(mutex);
-										sem_post(large_queue);
-										--shared_mem->l_count;
-										--shared_mem->l_spaces;
-										shared_mem->last_decr = large;
-										shared_mem->space_to_park = large;
-									sem_post(mutex);
-								}
-							}
+					else if(shared_mem->sl_count > 0 || shared_mem->ml_count > 0 || shared_mem->l_count > 0) {
+
+						/* Only large parking spaces are available. Candidate semaphore queues to perform V() on are:
+						 * small_large, medium_large, large 
+						 */
+						total_min = min_arr[1];	/* find which of the 3 semaphore queues mentioned above includes the vessel with */
+									/* the highest priority */
+						
+						park_on_large_space(shared_mem, total_min, min2, min3, mutex, small_large_queue, medium_large_queue, large_queue);
+
+						sem_wait(inform_vessel);
 					}
 				}
-				else
-					if( (total_min == min2) && (total_min != MAXLONG) ) {				/* min2->small_large_queue semaphore */
+				else {
+					if( (total_min == min2) && (total_min != MAXLONG) ) {	/* min2->small_large_queue semaphore */
 						if( (shared_mem->s_spaces > 0) || (shared_mem->l_spaces > 0 ) ) {
-							if(shared_mem->s_spaces > 0) {
-								sem_wait(mutex);
-									sem_post(small_large_queue);
-									--shared_mem->sl_count;
-									--shared_mem->s_spaces;
-									shared_mem->space_to_park = small;
-									shared_mem->last_decr = small;
-								sem_post(mutex);
-							}
-							else {
-								sem_wait(mutex);
-									sem_post(small_large_queue);
-									--shared_mem->sl_count;
-									--shared_mem->l_spaces;
-									shared_mem->space_to_park = large;
-									shared_mem->last_decr = large;
-								sem_post(mutex);
-							}
+							park_small_large(shared_mem, mutex, small_large_queue);
+
+							sem_wait(inform_vessel);
 						}
-						else {	
-							/* If only medium parking spaces are available, candidate semaphore queues to perform V() on are: 
+						else if(shared_mem->sm_count > 0 || shared_mem->ml_count > 0) {	
+
+							/* Only medium parking spaces are available. Candidate semaphore queues to perform V() on are: 
 							 * small_medium_queue, medium_large_queue
 							 */
 							total_min = min_arr[1];		
 							if( (total_min != min1) && (total_min != min3) )
 								total_min = min_arr[2];
 
-							if( (total_min == min1) && (total_min != MAXLONG)) {
-								sem_wait(mutex);
-									sem_post(small_medium_queue);
-									--shared_mem->sm_count;
-									--shared_mem->m_spaces;
-									shared_mem->space_to_park = medium;
-									shared_mem->last_decr = medium;
-								sem_post(mutex);
-							}
-							else
-								if( (total_min == min3) && (total_min != MAXLONG)) {
-									sem_wait(mutex);
-										sem_post(medium_large_queue);
-										--shared_mem->ml_count;
-										--shared_mem->m_spaces;
-										shared_mem->space_to_park = medium;
-										shared_mem->last_decr = medium;
-									sem_post(mutex);
-								}
+							park_on_medium_space(shared_mem, total_min, min1, min3, mutex, small_medium_queue, medium_large_queue);
+
+							sem_wait(inform_vessel);
 						}
 					}
 					else {
 						if( (total_min == min3) && (total_min != MAXLONG) ) {			/* min3->medium_large_queue semaphore */
 							if( (shared_mem->m_spaces > 0) || (shared_mem->l_spaces > 0 ) ) {
-								if(shared_mem->m_spaces > 0) {
-									sem_wait(mutex);
-										sem_post(medium_large_queue);
-										--shared_mem->ml_count;
-										--shared_mem->m_spaces;
-										shared_mem->space_to_park = medium;
-										shared_mem->last_decr = medium;
-									sem_post(mutex);
-								}
-								else {
-									sem_wait(mutex);
-										sem_post(medium_large_queue);
-										--shared_mem->ml_count;
-										--shared_mem->l_spaces;
-										shared_mem->space_to_park = large;
-										shared_mem->last_decr = large;
-									sem_post(mutex);
-								}
+
+								park_medium_large(shared_mem, mutex, medium_large_queue);
+								
+								sem_wait(inform_vessel);
 							}
-							else {	
-								/* If only small parking spaces are available, candidate semaphore queues to perform V() on are: 
+							else if(shared_mem->sm_count > 0 || shared_mem->sl_count > 0) {	
+								/* Only small parking spaces are available, candidate semaphore queues to perform V() on are: 
 								 * small_medium_queue, small_large_queue
 								 */
 								total_min = min_arr[1];
 								if( (total_min != min1) && (total_min != min2) )
 									total_min = min_arr[2];
-								if( (total_min == min1) && (total_min != MAXLONG)) {
-									sem_wait(mutex);
-										sem_post(small_medium_queue);
-										--shared_mem->sm_count;
-										--shared_mem->s_spaces;
-										shared_mem->space_to_park = small;
-										shared_mem->last_decr = small;
-									sem_post(mutex);
-								}
-								else
-									if( (total_min == min2) && (total_min != MAXLONG) ) {
-										sem_wait(mutex);
-											sem_post(small_large_queue);
-											--shared_mem->sl_count;
-											--shared_mem->s_spaces;
-											shared_mem->space_to_park = small;
-											shared_mem->last_decr = small;
-										sem_post(mutex);
-									}
+
+								park_on_small_space(shared_mem, total_min, min1, min2, mutex, small_medium_queue, small_large_queue);
+								sem_wait(inform_vessel);
 							}
 						}
 						else {	
 							if(total_min != MAXLONG) {		/* min4->large_queue semaphore */
 								if(shared_mem->l_spaces > 0) {
-									sem_wait(mutex);
-										sem_post(large_queue);
-										--shared_mem->l_spaces;
-										--shared_mem->l_count;
-										shared_mem->space_to_park = large;
-										shared_mem->last_decr = large;
-									sem_post(mutex);
+									park_large(shared_mem, mutex, large_queue);
+						
+									sem_wait(inform_vessel);
 								}
-								else {	
-									/* if only small or medium parking spaces are available, candidate semaphore queues 
+								else if(shared_mem->sm_count > 0 || shared_mem->sl_count > 0 || shared_mem->ml_count > 0) {	
+									/* Only small or medium parking spaces are available, candidate semaphore queues 
 									 * to perform V() on are: small_medium_queue, small_large_queue, medium_large_queue
 									 */
 									total_min = min_arr[1];
+
 									if( (total_min == min1) && (total_min != MAXLONG) ) {		/* small_medium queue */
 										if( (shared_mem->s_spaces > 0) || (shared_mem->m_spaces > 0) ) {
 											if(shared_mem->s_spaces > 0) {
@@ -710,6 +550,8 @@ int main(int argc, char *argv[]) {
 													shared_mem->last_decr = medium;
 												sem_post(mutex);
 											}
+						
+											sem_wait(inform_vessel);
 										}
 									}
 									if( (total_min == min2) && (total_min != MAXLONG) && (shared_mem->s_spaces > 0) ) {
@@ -721,6 +563,8 @@ int main(int argc, char *argv[]) {
 											shared_mem->space_to_park = small;
 											shared_mem->last_decr = small;
 										sem_post(mutex);
+							
+										sem_wait(inform_vessel);
 									}
 									if( (total_min == min3) && (total_min != MAXLONG) && (shared_mem->m_spaces > 0) ) {
 										sem_wait(mutex);
@@ -730,18 +574,22 @@ int main(int argc, char *argv[]) {
 											shared_mem->space_to_park = medium;
 											shared_mem->last_decr = medium;
 										sem_post(mutex);
+						
+										sem_wait(inform_vessel);
 									}
 								}
 							}
 						}
 					}
+				}
 
 
-			/*test*/printf("Pm: S:%d M:%d L:%d\n", shared_mem->s_spaces, shared_mem->m_spaces, shared_mem->l_spaces);
-			/*test*/printf("Pm: SM:%d SL:%d ML:%d L:%d\n", shared_mem->sm_count, shared_mem->sl_count, shared_mem->ml_count, shared_mem->l_count);
+				printf("\nAfter a vessel has parked\n");
+			/*test*/printf("-> Pm: Small:%d\tMedium:%d\tLarge:%d\n", shared_mem->s_spaces, shared_mem->m_spaces, shared_mem->l_spaces);
+			/*test*/printf("-> Pm: SM:%d SL:%d ML:%d L:%d\n\n", shared_mem->sm_count, shared_mem->sl_count, shared_mem->ml_count, shared_mem->l_count);
 			
 			}
-			else
+			else {
 				/* If there are vessels waiting permission from the port-master to enter the port */
 
 				if(shared_mem->ready_to_enter > 0) {
@@ -765,7 +613,7 @@ int main(int argc, char *argv[]) {
 								break;
 							}
 					}
-					else 
+					else {
 						if(shared_mem->info.park_space == medium) {
 							for(i = 0; i < shared_mem->m_capacity; ++i) 
 								if(shared_mem->m_array[i].vessel_status == departed) {		/* if the space is empty */
@@ -788,6 +636,7 @@ int main(int argc, char *argv[]) {
 									break;
 								}
 						}
+					}
 
 
 					sem_wait(mutex);
@@ -795,9 +644,11 @@ int main(int argc, char *argv[]) {
 						--shared_mem->ready_to_enter;
 					sem_post(mutex);
 				}
+			}
 	}
 
 	fclose(fp1);
+
 	/* close the named semaphores */
 	sem_close(mutex);
 	sem_close(port_master);
@@ -811,6 +662,7 @@ int main(int argc, char *argv[]) {
 	sem_close(small_large_queue); 
 	sem_close(medium_large_queue);
 	sem_close(large_queue);
+	sem_close(inform_vessel);
 
 	if( (shmdt( (void *) shared_mem) ) == -1)
 		perror("detach");

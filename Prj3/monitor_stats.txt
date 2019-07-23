@@ -1,0 +1,251 @@
+
+Medium Space 1:
+Vessel name:Vessel_17
+Vessel Type:1
+Arrival Time:1563889458
+
+Large Space 1:
+Vessel name:Vessel_2
+Vessel Type:2
+Arrival Time:1563889452
+
+Average waiting time for small vessels: 17
+Average waiting time for medium vessels: 6
+Average waiting time for large vessels: 14
+Average waiting time: 14
+Port's money: 1740
+
+Small Space 2:
+Vessel name:Vessel_18
+Vessel Type:0
+Arrival Time:1563889484
+
+Average waiting time for small vessels: 44
+Average waiting time for medium vessels: 12
+Average waiting time for large vessels: 28
+Average waiting time: 36
+Port's money: 5670
+
+Small Space 2:
+Vessel name:Vessel_27
+Vessel Type:0
+Arrival Time:1563889518
+
+Large Space 1:
+Vessel name:Vessel_4
+Vessel Type:2
+Arrival Time:1563889522
+
+Average waiting time for small vessels: 83
+Average waiting time for medium vessels: 18
+Average waiting time for large vessels: 52
+Average waiting time: 68
+Port's money: 8220
+
+Small Space 1:
+Vessel name:Vessel_43
+Vessel Type:0
+Arrival Time:1563889558
+
+Medium Space 1:
+Vessel name:Vessel_8
+Vessel Type:1
+Arrival Time:1563889566
+
+Large Space 1:
+Vessel name:Vessel_1
+Vessel Type:2
+Arrival Time:1563889560
+
+Average waiting time for small vessels: 130
+Average waiting time for medium vessels: 72
+Average waiting time for large vessels: 99
+Average waiting time: 113
+Port's money: 9330
+
+Small Space 1:
+Vessel name:Vessel_40
+Vessel Type:0
+Arrival Time:1563889603
+
+Small Space 2:
+Vessel name:Vessel_24
+Vessel Type:0
+Arrival Time:1563889574
+
+Medium Space 1:
+Vessel name:Vessel_32
+Vessel Type:1
+Arrival Time:1563889587
+
+Average waiting time for small vessels: 191
+Average waiting time for medium vessels: 137
+Average waiting time for large vessels: 165
+Average waiting time: 174
+Port's money: 13935
+
+Average waiting time for small vessels: 254
+Average waiting time for medium vessels: 218
+Average waiting time for large vessels: 241
+Average waiting time: 244
+Port's money: 16965
+
+Small Space 1:
+Vessel name:Vessel_36
+Vessel Type:0
+Arrival Time:1563889671
+
+Small Space 2:
+Vessel name:Vessel_34
+Vessel Type:0
+Arrival Time:1563889651
+
+Medium Space 1:
+Vessel name:Vessel_45
+Vessel Type:1
+Arrival Time:1563889663
+
+Large Space 1:
+Vessel name:Vessel_16
+Vessel Type:2
+Arrival Time:1563889657
+
+Average waiting time for small vessels: 339
+Average waiting time for medium vessels: 311
+Average waiting time for large vessels: 327
+Average waiting time: 330
+Port's money: 20745
+
+Average waiting time for small vessels: 419
+Average waiting time for medium vessels: 418
+Average waiting time for large vessels: 424
+Average waiting time: 420
+Port's money: 22965
+
+Small Space 1:
+Vessel name:Vessel_35
+Vessel Type:0
+Arrival Time:1563889744
+
+Small Space 2:
+Vessel name:Vessel_22
+Vessel Type:0
+Arrival Time:1563889715
+
+Medium Space 1:
+Vessel name:Vessel_42
+Vessel Type:1
+Arrival Time:1563889721
+
+Large Space 1:
+Vessel name:Vessel_29
+Vessel Type:2
+Arrival Time:1563889723
+
+Average waiting time for small vessels: 515
+Average waiting time for medium vessels: 576
+Average waiting time for large vessels: 558
+Average waiting time: 539
+Port's money: 28335
+
+Small Space 1:
+Vessel name:Vessel_11
+Vessel Type:0
+Arrival Time:1563889778
+
+Small Space 2:
+Vessel name:Vessel_28
+Vessel Type:0
+Arrival Time:1563889760
+
+Medium Space 1:
+Vessel name:Vessel_47
+Vessel Type:1
+Arrival Time:1563889766
+
+Large Space 1:
+Vessel name:Vessel_19
+Vessel Type:2
+Arrival Time:1563889762
+
+Average waiting time for small vessels: 627
+Average waiting time for medium vessels: 676
+Average waiting time for large vessels: 626
+Average waiting time: 636
+Port's money: 31365
+
+Small Space 2:
+Vessel name:Vessel_31
+Vessel Type:0
+Arrival Time:1563889792
+
+Average waiting time for small vessels: 772
+Average waiting time for medium vessels: 796
+Average waiting time for large vessels: 795
+Average waiting time: 783
+Port's money: 35025
+
+Large Space 1:
+Vessel name:Vessel_21
+Vessel Type:2
+Arrival Time:1563889838
+
+Average waiting time for small vessels: 899
+Average waiting time for medium vessels: 935
+Average waiting time for large vessels: 878
+Average waiting time: 900
+Port's money: 36510
+
+Small Space 1:
+Vessel name:Vessel_46
+Vessel Type:0
+Arrival Time:1563889862
+
+Medium Space 1:
+Vessel name:Vessel_23
+Vessel Type:1
+Arrival Time:1563889856
+
+Large Space 1:
+Vessel name:Vessel_48
+Vessel Type:2
+Arrival Time:1563889881
+
+Average waiting time for small vessels: 1097
+Average waiting time for medium vessels: 1091
+Average waiting time for large vessels: 998
+Average waiting time: 1064
+Port's money: 39555
+
+Large Space 1:
+Vessel name:Vessel_9
+Vessel Type:2
+Arrival Time:1563889907
+
+Average waiting time for small vessels: 1294
+Average waiting time for medium vessels: 1261
+Average waiting time for large vessels: 1234
+Average waiting time: 1268
+Port's money: 40905
+
+Medium Space 1:
+Vessel name:Vessel_49
+Vessel Type:1
+Arrival Time:1563889955
+
+Large Space 1:
+Vessel name:Vessel_41
+Vessel Type:1
+Arrival Time:1563889941
+
+Average waiting time for small vessels: 1492
+Average waiting time for medium vessels: 1371
+Average waiting time for large vessels: 1471
+Average waiting time: 1454
+Port's money: 46350
+
+Average waiting time for small vessels: 1689
+Average waiting time for medium vessels: 1675
+Average waiting time for large vessels: 1708
+Average waiting time: 1691
+Port's money: 46350

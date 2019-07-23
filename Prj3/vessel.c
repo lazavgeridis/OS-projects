@@ -13,8 +13,6 @@
 
 #include "SharedMem.h"
 
-#define MAXLONG 2147483647
-
 
 int main(int argc, char *argv[]) {
 
@@ -60,22 +58,18 @@ int main(int argc, char *argv[]) {
 	sem_t *small_large_queue = sem_open("/small_large_queue", 0);
 	sem_t *medium_large_queue = sem_open("/medium_large_queue", 0);
 	sem_t *large_queue = sem_open("/large_queue", 0);
+	sem_t *inform_vessel = sem_open("/inform_vessel", 0);
 
 
-	/****************** acquire mutex *******************/
 	sem_wait(mutex);
-
-	/* write to shared memory - increment the number of vessels waiting to be acknowledged by the port master */
-	printf("%s arrived at the port at %ld\n\n", argv[11], time(NULL) ); 	
-	++shared_mem->waiting_pm;
+		/* write to shared memory - increment the number of vessels waiting to be acknowledged by the port master */
+		printf("\n%s arrived at the Sea Seafety Approach Lane at %ld\n", argv[11], time(NULL) ); 	
+		++shared_mem->waiting_pm;
 	
-
-	/* (1)************** V(pending_vessel) *********************(1) */
-	sem_post(pending_vessel);	/* "wake up" the port-master in case he is idle */
-
-
+		/* (1)************** V(pending_vessel) *********************(1) */
+		sem_post(pending_vessel);	/* "wake up" the port-master in case he is idle */
 	sem_post(mutex);		
-	/******************* release mutex ******************/	
+
 
 	time_t come_in = time(NULL);
 
@@ -83,7 +77,6 @@ int main(int argc, char *argv[]) {
 	sem_wait(port_master);
 
 	time_t queue_arrival = time(NULL);
-	printf("%s: I am starting to wait on my semaphore \"queue\" on t = %ld\n", argv[11], queue_arrival);
 
 	/* get intentionally blocked on the semaphore that describes the vessel's primary and upgrade type */
 	if(primary_type == small) {
@@ -92,26 +85,26 @@ int main(int argc, char *argv[]) {
 			sem_wait(mutex);
 				shared_mem->sm_array[shared_mem->sm_index++] = queue_arrival;	/* make public the time you started waiting */
 				++shared_mem->sm_count;						/* increment the number of small->medium vessels waiting */
-				printf("%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 
 			/* Signal port_master to examine the vessel's request */
 			sem_post(examine);
 
-			sem_wait(small_medium_queue);
+	SM:		sem_wait(small_medium_queue);
 		}
 		else { /* upgrade_type = large */
 
 			sem_wait(mutex);
 				shared_mem->sl_array[shared_mem->sl_index++] = queue_arrival;	/* make public the time you started waiting */
 				++shared_mem->sl_count;						/* increment the number of small->large vessels waiting */
-				printf("%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 
 			/* Signal port_master to examine the vessel's request */
 			sem_post(examine);
 
-			sem_wait(small_large_queue);
+	SL:		sem_wait(small_large_queue);
 		}
 	}
 	else {
@@ -120,42 +113,51 @@ int main(int argc, char *argv[]) {
 			sem_wait(mutex);
 				shared_mem->ml_array[shared_mem->ml_index++] = queue_arrival;
 				++shared_mem->ml_count;
-				printf("%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 
 			/* Signal port_master to examine the vessel's request */
 			sem_post(examine);
 
-			sem_wait(medium_large_queue);
+	ML:		sem_wait(medium_large_queue);
 		}
 		else { /* primary_type = large */
 
 			sem_wait(mutex);
 				shared_mem->lrg_array[shared_mem->l_index++] = queue_arrival;
 				++shared_mem->l_count;
-				printf("%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s requested to enter the port at %ld\n\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 
 			/* Signal port_master to examine the vessel's request */
 			sem_post(examine);
 
-			sem_wait(large_queue);
+	L:		sem_wait(large_queue);
 		}
 	}
 
 
 	sem_wait(mutex);
 		space_to_park = shared_mem->space_to_park;	/* learn the type of parking space the port-master chose for the vessel */
+		sem_post(inform_vessel);
 	sem_post(mutex);
+
+
+	printf("\n%s: I will park on a %d space(My type is %s and my upgrade type is %s)\n", argv[11], space_to_park, argv[1], argv[3]);
 
 
 	/***********************************************************************/
 
 	/* in some cases this "miscommunication" appears */
-	//if( (space_to_park != primary_type) && (space_to_park != upgrade_type) ) {
-	//	if(primary_type == large)	
-	//		space_to_park = large;
-	//}
+	if( (space_to_park != primary_type) && (space_to_park != upgrade_type) ) {
+
+		printf("\t!!!!!!!!!!!!!!!!! PROBLEM !!!!!!!!!!!!!!!!!!!\n");
+
+		if(primary_type == small && upgrade_type == medium) goto SM;
+		else if(primary_type == small && upgrade_type == medium) goto SL;
+		else if(primary_type == medium && upgrade_type == large) goto ML;
+		else goto L;
+	}
 
 	/************************************************************************/
 
@@ -227,20 +229,20 @@ int main(int argc, char *argv[]) {
 	if(primary_type == small) {
 		sem_wait(mutex);
 			shared_mem->s_waitingtime[shared_mem->swt_index++] = time_to_park - come_in;
-			printf("Port master gave permission for entrance to %s at %ld\n\n", argv[11], time(NULL) ); 	
+			printf("\n%s: Port master gave me permission to enter the harbor at %ld\n", argv[11], time(NULL) ); 	
 		sem_post(mutex);
 	}
 	else {
 		if(primary_type == medium) {
 			sem_wait(mutex);
 				shared_mem->m_waitingtime[shared_mem->mwt_index++] = time_to_park - come_in;
-				printf("Port master gave permission for entrance to %s at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s: Port master gave me permission to enter the harbor at %ld\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 		}
 		else {
 			sem_wait(mutex);
 				shared_mem->l_waitingtime[shared_mem->lwt_index++] = time_to_park - come_in;
-				printf("Port master gave permission for entrance to %s at %ld\n\n", argv[11], time(NULL) ); 	
+				printf("\n%s: Port master gave me permission to enter the harbor at %ld\n", argv[11], time(NULL) ); 	
 			sem_post(mutex);
 		}
 	}
@@ -248,19 +250,17 @@ int main(int argc, char *argv[]) {
 	/* acquire port_mutex, in order to enter the port and park afterwards */
 	sem_wait(port_mutex);
 
-	/* also acquire regular mutex */
 	sem_wait(mutex);
 
-	/* write vessel info to vessel_slot */
-	strcpy(shared_mem->info.name, argv[11]);
-	shared_mem->info.primary_type = primary_type;
-	shared_mem->info.upgrade_type = upgrade_type;
-	shared_mem->info.park_space = space_to_park;
-	shared_mem->info.park_period = parkperiod;
-	shared_mem->info.mantime = mantime;
-	/* now port master can copy this information to the parking space the vessel will use */
+		/* write vessel info to vessel_slot */
+		strcpy(shared_mem->info.name, argv[11]);
+		shared_mem->info.primary_type = primary_type;
+		shared_mem->info.upgrade_type = upgrade_type;
+		shared_mem->info.park_space = space_to_park;
+		shared_mem->info.park_period = parkperiod;
+		shared_mem->info.mantime = mantime;
+		/* now port master can copy this information to the parking space the vessel will use */
 	
-	/* release mutex */
 	sem_post(mutex);
 
 	/* call port master to acquire vessel's information */
@@ -279,18 +279,18 @@ int main(int argc, char *argv[]) {
 
 
 /*************************************************************************************************************/
-	/* now it is time to depart */
 	
-	/* vessel should now be informed for the cost of its parking duration and obviously pay the fee 
-	 * to do that, it should find its parking space info in the public ledger and calculate the total cost 
+	
+	/* Now it is time for the vessel to depart. It should also be informed for the cost of its 
+	 * parking duration and obviously pay the fee. To do that, it should find its parking space 
+	 * info in the public ledger and calculate the total cost 
 	 */
 	time_t space_departure = time(NULL);
-	printf("%s: I am leaving my parking space at %ld\n", argv[11], space_departure);
+	printf("\n%s: I am leaving my parking space at %ld\n", argv[11], space_departure);
 	unsigned int v_cost = 0; 
 
 	if(space_to_park == small) {
 
-		/* search in small spaces first */
 		for(i = 0; i < shared_mem->s_capacity; ++i) {
 			if(strcmp(argv[11], shared_mem->s_array[i].name) == 0) {
 					v_cost = parkperiod * (shared_mem->s_array[i].cost);
@@ -301,7 +301,6 @@ int main(int argc, char *argv[]) {
 	else {
 		if(space_to_park == medium) {
 
-			/* search in medium spaces first */
 			for(i = 0; i < shared_mem->m_capacity; ++i) {
 				if(strcmp(argv[11], shared_mem->m_array[i].name) == 0) {
 					v_cost = parkperiod * (shared_mem->m_array[i].cost);
@@ -309,7 +308,6 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
-		/* if vessel's primary type is large */
 		else {
 			for(i = 0; i < shared_mem->l_capacity; ++i) {
 				if(strcmp(argv[11], shared_mem->l_array[i].name) == 0) {
@@ -350,9 +348,8 @@ int main(int argc, char *argv[]) {
 	/* release port mutex */
 	sem_post(port_mutex);
 
-	printf("%s is leaving the port at %ld\n", argv[11], time(NULL));
+	printf("\n%s left the port at %ld\n", argv[11], time(NULL));
 
-	
 	/* close the named semaphores */
 	sem_close(mutex);
 	sem_close(port_mutex);
@@ -367,6 +364,7 @@ int main(int argc, char *argv[]) {
 	sem_close(small_large_queue); 
 	sem_close(medium_large_queue);
 	sem_close(large_queue);
+	sem_close(inform_vessel);
 
 	if( (shmdt( (void *) shared_mem) ) == -1)
 		perror("detach");

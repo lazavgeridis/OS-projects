@@ -16,8 +16,7 @@
 #include "SharedMem.h"
 #include "myportInterface.h"
 
-#define MAXLONG 2147483647
-#define VESSELS 20		/* number of vessel processes to be created */
+#define VESSELS 50		/* number of vessel processes to be created */
 
 
 volatile sig_atomic_t exit_signal = 0;
@@ -82,7 +81,7 @@ int main(int argc, char *argv[]) {
 	 */
 	fp = fopen(argv[4], "r");
 	if(fp == NULL) {
-		fprintf(stdin, "Charges file could not be opened!\n");
+		fprintf(stderr, "Charges file could not be opened!\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -149,6 +148,7 @@ int main(int argc, char *argv[]) {
 	sem_t *small_large_queue = sem_open("/small_large_queue", O_CREAT|O_EXCL, S_IRUSR | S_IWUSR, 0); 	
 	sem_t *medium_large_queue = sem_open("/medium_large_queue", O_CREAT|O_EXCL, S_IRUSR | S_IWUSR, 0); 	
 	sem_t *large_queue = sem_open("/large_queue", O_CREAT|O_EXCL, S_IRUSR | S_IWUSR, 0); 	
+	sem_t *inform_vessel = sem_open("/inform_vessel", O_CREAT|O_EXCL, S_IRUSR | S_IWUSR, 0);
 
 	/* close all the semaphores */
 	sem_close(mutex);
@@ -164,6 +164,7 @@ int main(int argc, char *argv[]) {
 	sem_close(small_large_queue);
 	sem_close(medium_large_queue);
 	sem_close(large_queue);
+	sem_close(inform_vessel);
 
 	/* int variables */
 	shared_mem->s_capacity = s_cap;
@@ -204,9 +205,6 @@ int main(int argc, char *argv[]) {
 	char **pmaster_argv;
 	pmaster_argv = createPmasterArgv(shmid_buffer);
 
-	for(j = 0; j < 2; ++j)
-		printf("%s ", pmaster_argv[j]);
-	putchar('\n');
 
 	if(fork() == 0)
 		execvp("./port_master", pmaster_argv);	/* child process executes the port_master binary */
@@ -225,7 +223,6 @@ int main(int argc, char *argv[]) {
 
 	/* free the argument array */
 	for(j = 0; j < 6; j++) {
-		printf("%s ", monitor_argv[j]);
 		free(monitor_argv[j]);
 	}
 	free(monitor_argv);
@@ -238,10 +235,6 @@ int main(int argc, char *argv[]) {
 		sprintf(name_buffer, "Vessel_%d", i);
 		vessel_argv = createVesselArgv(name_buffer, shmid_buffer);
 
-		for(j = 0; j < 12; ++j) {
-			printf("%s ", vessel_argv[j]);
-		}
-		putchar('\n');
 
 		if(fork() == 0)	
 			execvp("./vessel" , vessel_argv); /* each child process executes the vessel binary */
@@ -276,6 +269,7 @@ int main(int argc, char *argv[]) {
 	sem_unlink("/small_large_queue");
 	sem_unlink("/medium_large_queue");
 	sem_unlink("/large_queue");
+	sem_unlink("/inform_vessel");
 
 	/* remove shared memory shegment */
 	if( (shmctl(shmid, IPC_RMID, 0) ) == -1)
