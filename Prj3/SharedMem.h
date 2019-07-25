@@ -62,12 +62,9 @@ typedef struct shared_memory {
 
 	/* each array represents a type of parking spaces(small, medium, large) */
 
-	small_spaces s_array[20];	
-	medium_spaces m_array[20];
-	large_spaces l_array[20];
-	//small_spaces *s_array;				
-	//small_spaces *m_array;				
-	//small_spaces *l_array;				
+	small_spaces *s_array;				
+	medium_spaces *m_array;				
+	large_spaces *l_array;				
 
 	/* used for vessel-port master communication */	
 	int ready_to_enter;
@@ -78,7 +75,6 @@ typedef struct shared_memory {
 	vessel_info info;
 	exit_info exit_info;
 	type space_to_park;
-	type last_decr;
 
 	/* more variables */
 	unsigned int s_capacity;

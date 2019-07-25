@@ -16,7 +16,7 @@
 #include "SharedMem.h"
 #include "myportInterface.h"
 
-#define VESSELS 50		/* number of vessel processes to be created */
+#define VESSELS 20		/* number of vessel processes to be created */
 
 
 volatile sig_atomic_t exit_signal = 0;
@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
 
 
 
+	memset(&sa, '\0', sizeof sa);
 	/* function to be executed when a SIGINT signal is caught, is sig_handler */
 	sa.sa_handler = sig_handler;
 	/* block every other signal when running sig_handler */
@@ -50,16 +51,6 @@ int main(int argc, char *argv[]) {
 		exit(-2);
 	}
 
-
-	/* create shared memory segment */
-	shmid = shmget(IPC_PRIVATE, sizeof(SharedMemory), 0666);
-	if(shmid ==  -1)  perror("shmget");
-
-
-	sprintf(shmid_buffer, "%d", shmid);
-
-	shared_mem = (SharedMemory *) shmat(shmid, (void *) 0, 0); 
-	if( (SharedMemory *) shared_mem == (void *)-1) 	perror("shmat");
 
 	/* open the configuration file:
 	 * it lists the number of parking spaces for each vessel type(small, medium, large)
@@ -92,31 +83,47 @@ int main(int argc, char *argv[]) {
 	fclose(fp); /* close charges file */
 
 
-	/* allocate memory for the struct arrays */
-	//shared_mem->s_array = malloc(s_cap * sizeof(small_spaces) );
-	//shared_mem->m_array = malloc(m_cap * sizeof(medium_spaces) );
-	//shared_mem->l_array = malloc(l_cap * sizeof(large_spaces) );
+	/* create shared memory segment */
+	shmid = shmget(IPC_PRIVATE, sizeof(SharedMemory) + s_cap * sizeof(small_spaces) + m_cap * sizeof(medium_spaces) + l_cap * sizeof(large_spaces) , 0666);
+	if(shmid ==  -1)  perror("shmget");
+
+
+	sprintf(shmid_buffer, "%d", shmid);
+
+	shared_mem = (SharedMemory *) shmat(shmid, (void *) 0, 0); 
+	if( (SharedMemory *) shared_mem == (void *)-1) 	perror("shmat");
+
+
 
 	/* initializations */
 
-	/* 3 struct arrays */
-	for( i = 0; i < s_cap; i++) { 
-		shared_mem->s_array[i].space_type = small;
-		shared_mem->s_array[i].vessel_status = departed; /* in other words this parking space is empty */
-		shared_mem->s_array[i].cost = s_cost;
-	}
-	for( i = 0; i < m_cap; i++)  {
-		shared_mem->m_array[i].space_type = medium;
-		shared_mem->m_array[i].vessel_status = departed;
-		shared_mem->m_array[i].cost = m_cost;
-	}
+	/* int variables */
+	shared_mem->s_capacity = s_cap;
+	shared_mem->m_capacity = m_cap;
+	shared_mem->l_capacity = l_cap;
+	shared_mem->s_spaces = s_cap;
+	shared_mem->m_spaces = m_cap;
+	shared_mem->l_spaces = l_cap;
 
-	for( i = 0; i < l_cap; i++)  {
-		shared_mem->l_array[i].space_type = large;
-		shared_mem->l_array[i].vessel_status = departed;
-		shared_mem->l_array[i].cost = l_cost;
-	}
+	shared_mem->sm_count = 0;
+	shared_mem->sl_count = 0;
+	shared_mem->ml_count = 0;
+	shared_mem->l_count = 0;
 
+	shared_mem->ready_to_enter = 0;
+	shared_mem->ready_to_exit = 0;
+	shared_mem->waiting_pm = 0;
+	shared_mem->sm_index = 0;
+	shared_mem->sl_index = 0;
+	shared_mem->ml_index = 0;
+	shared_mem->l_index = 0;
+	shared_mem->swt_index = 0;
+	shared_mem->mwt_index = 0;
+	shared_mem->lwt_index = 0;
+	shared_mem->total_money = 0;
+
+	strcpy(shared_mem->public_ledger,"past_public_ledger.txt");
+	strcpy(shared_mem->logfile,"logfile.txt");
 
 	for( i = 0; i < 30; ++i) {
 		shared_mem->sm_array[i] = MAXLONG;
@@ -133,6 +140,33 @@ int main(int argc, char *argv[]) {
 		shared_mem->lrg_array[i] = MAXLONG;
 		shared_mem->l_waitingtime[i] = 0;
 	}
+
+	/* 3 struct arrays: each one represents the total number of parking spaces per type(Small, Medium, Large) */
+
+	SharedMemory *shm1 = (SharedMemory *)shared_mem;
+
+	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
+	for( i = 0; i < s_cap; i++) { 
+		shm1->s_array[i].space_type = small;
+		shm1->s_array[i].vessel_status = departed; /* in other words this parking space is empty */
+		shm1->s_array[i].cost = s_cost;
+	}
+
+	shm1->m_array = (medium_spaces *) ( ((char *)shm1->s_array) + (s_cap * sizeof(small_spaces)) );
+	for( i = 0; i < m_cap; i++)  {
+		shm1->m_array[i].space_type = medium;
+		shm1->m_array[i].vessel_status = departed;
+		shm1->m_array[i].cost = m_cost;
+	}
+
+	shm1->l_array = (large_spaces *) ( ((char *)shm1->m_array) + (m_cap * sizeof(medium_spaces)) );
+	for( i = 0; i < l_cap; i++)  {
+		shm1->l_array[i].space_type = large;
+		shm1->l_array[i].vessel_status = departed;
+		shm1->l_array[i].cost = l_cost;
+	}
+
+
 
 	/* semaphores */
 	sem_t *mutex = sem_open("/mutex", O_CREAT|O_EXCL, S_IRUSR|S_IWUSR, 1);
@@ -166,33 +200,6 @@ int main(int argc, char *argv[]) {
 	sem_close(large_queue);
 	sem_close(inform_vessel);
 
-	/* int variables */
-	shared_mem->s_capacity = s_cap;
-	shared_mem->m_capacity = m_cap;
-	shared_mem->l_capacity = l_cap;
-	shared_mem->s_spaces = s_cap;
-	shared_mem->m_spaces = m_cap;
-	shared_mem->l_spaces = l_cap;
-
-	shared_mem->sm_count = 0;
-	shared_mem->sl_count = 0;
-	shared_mem->ml_count = 0;
-	shared_mem->l_count = 0;
-
-	shared_mem->ready_to_enter = 0;
-	shared_mem->ready_to_exit = 0;
-	shared_mem->waiting_pm = 0;
-	shared_mem->sm_index = 0;
-	shared_mem->sl_index = 0;
-	shared_mem->ml_index = 0;
-	shared_mem->l_index = 0;
-	shared_mem->swt_index = 0;
-	shared_mem->mwt_index = 0;
-	shared_mem->lwt_index = 0;
-	shared_mem->total_money = 0;
-
-	strcpy(shared_mem->public_ledger,"past_public_ledger.txt");
-	strcpy(shared_mem->logfile,"logfile.txt");
 
 
 	initTime();	/* srand */

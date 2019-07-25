@@ -15,5 +15,4 @@ void park_on_small_space(SharedMemory *, long, long, long, sem_t *, sem_t *, sem
 void park_large(SharedMemory *, sem_t *, sem_t *);
 
 
-
 long find_min(long *);

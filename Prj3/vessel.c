@@ -288,12 +288,20 @@ int main(int argc, char *argv[]) {
 	time_t space_departure = time(NULL);
 	printf("\n%s: I am leaving my parking space at %ld\n", argv[11], space_departure);
 	unsigned int v_cost = 0; 
+	SharedMemory *shm1 = (SharedMemory *)shared_mem;
+
+	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
+	shm1->m_array = (medium_spaces *) ( ((char *)shm1->s_array) + (shared_mem->s_capacity * sizeof(small_spaces)) );
+	shm1->l_array = (large_spaces *) ( ((char *)shm1->m_array) + (shared_mem->m_capacity * sizeof(medium_spaces)) );
+
+	printf("%d %d %d\n", shm1->m_array[0].space_type, shm1->m_array[0].vessel_status, shm1->m_array[0].cost);
+	printf("%d %d %d\n", shm1->l_array[0].space_type, shm1->l_array[0].vessel_status, shm1->l_array[0].cost);
 
 	if(space_to_park == small) {
 
 		for(i = 0; i < shared_mem->s_capacity; ++i) {
-			if(strcmp(argv[11], shared_mem->s_array[i].name) == 0) {
-					v_cost = parkperiod * (shared_mem->s_array[i].cost);
+			if(strcmp(argv[11], shm1->s_array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->s_array[i].cost);
 					break;
 			}
 		}
@@ -302,21 +310,23 @@ int main(int argc, char *argv[]) {
 		if(space_to_park == medium) {
 
 			for(i = 0; i < shared_mem->m_capacity; ++i) {
-				if(strcmp(argv[11], shared_mem->m_array[i].name) == 0) {
-					v_cost = parkperiod * (shared_mem->m_array[i].cost);
+				if(strcmp(argv[11], shm1->m_array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->m_array[i].cost);
 					break;
 				}
 			}
 		}
 		else {
 			for(i = 0; i < shared_mem->l_capacity; ++i) {
-				if(strcmp(argv[11], shared_mem->l_array[i].name) == 0) {
-					v_cost = parkperiod * (shared_mem->l_array[i].cost);
+				if(strcmp(argv[11], shm1->l_array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->l_array[i].cost);
 					break;
 				}
 			}
 		}
 	}
+
+	printf("After\n");
 
 	sem_wait(mutex);
 		++shared_mem->ready_to_exit;
@@ -333,12 +343,15 @@ int main(int argc, char *argv[]) {
 	sem_wait(mutex);
 		/* vessel writes to exit_info its name,type,upgrade type,time it left its parking space, and total cost */
 		strcpy(shared_mem->exit_info.name, argv[11]);
+		printf("YES\n");
 		shared_mem->exit_info.parkspace = space_to_park;
 		shared_mem->exit_info.primary_type = primary_type;
 		shared_mem->exit_info.upgrade_type = upgrade_type;
 		shared_mem->exit_info.left_space = space_departure;
 		shared_mem->exit_info.v_cost = v_cost;
 	sem_post(mutex);
+
+	printf("After(2)\n");
 
 	/* P(examine_exiting) after vessel has written its exit info in shared memory */
 	sem_post(examine_exiting);
