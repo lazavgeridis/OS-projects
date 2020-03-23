@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/stat.h>
@@ -38,8 +39,8 @@ int main(int argc, char *argv[]) {
 	if( (SharedMemory *) shared_mem == (void *) -1) 
 		perror("shmat");
 
-	memset(&sa, '\0', sizeof sa);
 	/* function to be executed when a SIGINT signal is caught is sig_handler */
+	memset(&sa, '\0', sizeof sa);
 	sa.sa_handler = sig_handler;
 	/* block every other signal when running sig_handler */
 	sigfillset(&sa.sa_mask);
@@ -71,14 +72,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	SharedMemory *shm1 = (SharedMemory *)shared_mem;
-	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
-	shm1->m_array = (medium_spaces *) ( ((char *)shm1->s_array) + (shared_mem->s_capacity * sizeof(small_spaces)) );
-	shm1->l_array = (large_spaces *) ( ((char *)shm1->m_array) + (shared_mem->m_capacity * sizeof(medium_spaces)) );
-
+	shm1->array = (parking_spaces *) (shm1 + 1);
+	//shm1->array = (parking_spaces *) ( /*((uint8_t *)shared_mem)*/1 + (sizeof(SharedMemory)) );
 
 
 	while(exit_signal == 0) {
-
 
 
 		/* Port master "sleeps" until a pending vessel shows up - avoid busy waiting */
@@ -103,11 +101,11 @@ int main(int argc, char *argv[]) {
 					/* always check if the space is occupied by an idle vessel, because if it is not occupied 
 					 * we may compare the vessel's name with an uninitialized string 
 					 */
-					if(shm1->s_array[i].vessel_status == idle)
-						if(strcmp(shm1->s_array[i].name, shared_mem->exit_info.name) == 0)  {
+					if(shm1->array[i].vessel_status == idle)
+						if(strcmp(shm1->array[i].name, shared_mem->exit_info.name) == 0)  {
 							sem_wait(mutex);
-								shm1->s_array[i].vessel_status = departed;
-								shm1->s_array[i].depart_time = shared_mem->exit_info.left_space;
+								shm1->array[i].vessel_status = departed;
+								shm1->array[i].depart_time = shared_mem->exit_info.left_space;
 								++shared_mem->s_spaces;
 							sem_post(mutex);
 							flag = small;
@@ -120,12 +118,12 @@ int main(int argc, char *argv[]) {
 				if(shared_mem->exit_info.parkspace == medium) {
 
 
-					for(i = 0; i < shared_mem->m_capacity; ++i) { 
-						if(shm1->m_array[i].vessel_status == idle)
-							if(strcmp(shm1->m_array[i].name, shared_mem->exit_info.name) == 0)  {
+					for(i = shared_mem->s_capacity; i < shared_mem->m_capacity; ++i) { 
+						if(shm1->array[i].vessel_status == idle)
+							if(strcmp(shm1->array[i].name, shared_mem->exit_info.name) == 0)  {
 								sem_wait(mutex);
-									shm1->m_array[i].vessel_status = departed;
-									shm1->m_array[i].depart_time = shared_mem->exit_info.left_space;
+									shm1->array[i].vessel_status = departed;
+									shm1->array[i].depart_time = shared_mem->exit_info.left_space;
 									++shared_mem->m_spaces;
 								sem_post(mutex);
 								flag = medium;
@@ -136,12 +134,12 @@ int main(int argc, char *argv[]) {
 				}
 				else{
 					/* if it reached that far, vessel's type in exit info must be large */
-					for(i = 0; i < shared_mem->l_capacity; ++i)  {
-						if(shm1->l_array[i].vessel_status == idle)
-							if(strcmp(shm1->l_array[i].name, shared_mem->exit_info.name) == 0)  {
+					for(i = shared_mem->m_capacity; i < shared_mem->l_capacity; ++i)  {
+						if(shm1->array[i].vessel_status == idle)
+							if(strcmp(shm1->array[i].name, shared_mem->exit_info.name) == 0)  {
 								sem_wait(mutex);
-									shm1->l_array[i].vessel_status = departed;
-									shm1->l_array[i].depart_time = shared_mem->exit_info.left_space;
+									shm1->array[i].vessel_status = departed;
+									shm1->array[i].depart_time = shared_mem->exit_info.left_space;
 									++shared_mem->l_spaces;
 								sem_post(mutex);
 								flag = large;
@@ -156,20 +154,20 @@ int main(int argc, char *argv[]) {
 
 			if(flag == small)
 				fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Small\nVessel Type:Small\nVessel Status:departed\n"
-						"Total Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, shm1->s_array[i].park_time, \
-											shared_mem->exit_info.v_cost, shm1->s_array[i].depart_time);
+						"Total Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, shm1->array[i].park_time, \
+											shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 			else
 				if(flag == medium) {
 					if(shared_mem->exit_info.primary_type == small)
 				      		fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Medium\nVessel Type:Small\nVessel Status:departed\n"
 								"Total Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, \
-													shm1->m_array[i].park_time, \
-												shared_mem->exit_info.v_cost, shm1->m_array[i].depart_time);
+													shm1->array[i].park_time, \
+												shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 
 					else { 	
 				      		fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Medium\nVessel Type:Medium\n"
 								"Vessel Status:departed\nTotal Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, \
-							shm1->m_array[i].park_time, shared_mem->exit_info.v_cost, shm1->m_array[i].depart_time);
+							shm1->array[i].park_time, shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 					}
 				}
 				else {
@@ -177,18 +175,18 @@ int main(int argc, char *argv[]) {
 					if(shared_mem->exit_info.primary_type == small)
 				      		fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Large\nVessel Type:Small\nVessel Status:departed\n"
 								"Total Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, \
-													shm1->l_array[i].park_time, \
-												shared_mem->exit_info.v_cost, shm1->l_array[i].depart_time);
+													shm1->array[i].park_time, \
+												shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 					else
 						if(shared_mem->exit_info.primary_type == medium)
 				      			fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Large\nVessel Type:Medium\n"
 								"Vessel Status:departed\nTotal Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, \
-																shm1->l_array[i].park_time, \
-												shared_mem->exit_info.v_cost, shm1->l_array[i].depart_time);
+																shm1->array[i].park_time, \
+												shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 						else /* primary type is large */
 				      			fprintf(fp1, "Vessel Name:%s\nArrival Time:%ld\nParking Space:Large\nVessel Type:Large\n"
 								"Vessel Status:departed\nTotal Cost:%d\nDeparture Time:%ld\n\n", shared_mem->exit_info.name, \
-							       shm1->l_array[i].park_time, shared_mem->exit_info.v_cost, shm1->l_array[i].depart_time);
+							       shm1->array[i].park_time, shared_mem->exit_info.v_cost, shm1->array[i].depart_time);
 				}
 
 			fflush(fp1);
@@ -597,56 +595,62 @@ int main(int argc, char *argv[]) {
 
 				if(shared_mem->ready_to_enter > 0) {
 
-					printf("Ready to enter!\n");
-
 					sem_post(pre_park);
 
 
 					sem_wait(examine_entering);
 
+
 					time_t vessel_arrival = time(NULL) + shared_mem->info.mantime;
 
-					printf("before copying\n");
-					printf("I got %s\n", shared_mem->info.name);
+					printf("%s is ready to enter\n", shared_mem->info.name);
+					printf("before copying vessel's info to shared mem\n");
 
 					/* write to the appropriate struct array the vessel's info */
 					if(shared_mem->info.park_space == small) {
-						for(i = 0; i < shared_mem->s_capacity; ++i) 
-							if(shm1->s_array[i].vessel_status == departed) {
+						for(i = 0; i < shared_mem->s_capacity; i++) 
+							if(shm1->array[i].vessel_status == departed) {
 								/* when an available space is found, copy vessel's info */
-								strcpy(shm1->s_array[i].name, shared_mem->info.name); /* copy vessel's name */
-								shm1->s_array[i].vessel_type = shared_mem->info.primary_type; /* copy vessel's type */
-								shm1->s_array[i].vessel_status = idle; /* mark the space as occupied */
-								shm1->s_array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
+								printf("bef strcpy\n");
+								strcpy(shm1->array[i].name, shared_mem->info.name); /* copy vessel's name */
+								printf("after strcpy\n");
+								shm1->array[i].vessel_type = shared_mem->info.primary_type; /* copy vessel's type */
+								shm1->array[i].vessel_status = idle; /* mark the space as occupied */
+								shm1->array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
+
 								break;
 							}
 					}
 					else {
 						if(shared_mem->info.park_space == medium) {
-							for(i = 0; i < shared_mem->m_capacity; ++i) 
-								if(shm1->m_array[i].vessel_status == departed) {		/* if the space is empty */
+							for(i = shared_mem->s_capacity; i < shared_mem->m_capacity; i++) 
+								if(shm1->array[i].vessel_status == departed) {		/* if the space is empty */
 									/* when an available space is found, copy vessel's info */
-									strcpy(shm1->m_array[i].name, shared_mem->info.name); /* copy vessel's name */
-									shm1->m_array[i].vessel_type = shared_mem->info.primary_type;/* copy vessel's type */
-									shm1->m_array[i].vessel_status = idle; /* mark the space as occupied */
-									shm1->m_array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
+								printf("bef strcpy\n");
+									strcpy(shm1->array[i].name, shared_mem->info.name); /* copy vessel's name */
+								printf("after strcpy\n");
+									shm1->array[i].vessel_type = shared_mem->info.primary_type;/* copy vessel's type */
+									shm1->array[i].vessel_status = idle; /* mark the space as occupied */
+									shm1->array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
 									break;
 								}
 						}
 						else {
-							for(i = 0; i < shared_mem->l_capacity; ++i) 
-								if(shm1->l_array[i].vessel_status == departed) {			/* if the space is empty */
+							for(i = shared_mem->m_capacity; i < shared_mem->l_capacity; i++) 
+								if(shm1->array[i].vessel_status == departed) {			/* if the space is empty */
 									/* when an available space is found, copy vessel's info */
-									strcpy(shm1->l_array[i].name, shared_mem->info.name); /* copy vessel's name */
-									shm1->l_array[i].vessel_type = shared_mem->info.primary_type;/* copy vessel's type */
-									shm1->l_array[i].vessel_status = idle; /* mark the space as occupied */
-									shm1->l_array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
+								printf("bef strcpy\n");
+									strcpy(shm1->array[i].name, shared_mem->info.name); /* copy vessel's name */
+								printf("after strcpy\n");
+									shm1->array[i].vessel_type = shared_mem->info.primary_type;/* copy vessel's type */
+									shm1->array[i].vessel_status = idle; /* mark the space as occupied */
+									shm1->array[i].park_time = vessel_arrival;/* copy vessel's arrival time at the parking space */
 									break;
 								}
 						}
 					}
 
-					printf("after copying\n");
+					printf("after copying vessel's info to shared mem\n");
 
 					sem_wait(mutex);
 						printf("%s arrived at its parking space at %ld\n", shared_mem->info.name, vessel_arrival);

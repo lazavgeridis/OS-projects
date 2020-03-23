@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/stat.h>
@@ -290,18 +291,16 @@ int main(int argc, char *argv[]) {
 	unsigned int v_cost = 0; 
 	SharedMemory *shm1 = (SharedMemory *)shared_mem;
 
-	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
-	shm1->m_array = (medium_spaces *) ( ((char *)shm1->s_array) + (shared_mem->s_capacity * sizeof(small_spaces)) );
-	shm1->l_array = (large_spaces *) ( ((char *)shm1->m_array) + (shared_mem->m_capacity * sizeof(medium_spaces)) );
+	shm1->array = (parking_spaces *) (shm1 + 1);
+	//shm1->array = (parking_spaces *) ( /*((uint8_t *)shared_mem)*/1 + (sizeof(SharedMemory)) );
 
-	printf("%d %d %d\n", shm1->m_array[0].space_type, shm1->m_array[0].vessel_status, shm1->m_array[0].cost);
-	printf("%d %d %d\n", shm1->l_array[0].space_type, shm1->l_array[0].vessel_status, shm1->l_array[0].cost);
+	printf("Vessel before calculating cost\n");
 
 	if(space_to_park == small) {
 
-		for(i = 0; i < shared_mem->s_capacity; ++i) {
-			if(strcmp(argv[11], shm1->s_array[i].name) == 0) {
-					v_cost = parkperiod * (shm1->s_array[i].cost);
+		for(i = 0; i < shared_mem->s_capacity; i++) {
+			if(strcmp(argv[11], shm1->array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->array[i].cost);
 					break;
 			}
 		}
@@ -309,24 +308,24 @@ int main(int argc, char *argv[]) {
 	else {
 		if(space_to_park == medium) {
 
-			for(i = 0; i < shared_mem->m_capacity; ++i) {
-				if(strcmp(argv[11], shm1->m_array[i].name) == 0) {
-					v_cost = parkperiod * (shm1->m_array[i].cost);
+			for(i = shared_mem->s_capacity; i < shared_mem->m_capacity; i++) {
+				if(strcmp(argv[11], shm1->array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->array[i].cost);
 					break;
 				}
 			}
 		}
 		else {
-			for(i = 0; i < shared_mem->l_capacity; ++i) {
-				if(strcmp(argv[11], shm1->l_array[i].name) == 0) {
-					v_cost = parkperiod * (shm1->l_array[i].cost);
+			for(i = shared_mem->m_capacity; i < shared_mem->l_capacity; i++) {
+				if(strcmp(argv[11], shm1->array[i].name) == 0) {
+					v_cost = parkperiod * (shm1->array[i].cost);
 					break;
 				}
 			}
 		}
 	}
 
-	printf("After\n");
+	printf("Vessel after calculating cost %d\n", v_cost);
 
 	sem_wait(mutex);
 		++shared_mem->ready_to_exit;
@@ -350,8 +349,6 @@ int main(int argc, char *argv[]) {
 		shared_mem->exit_info.left_space = space_departure;
 		shared_mem->exit_info.v_cost = v_cost;
 	sem_post(mutex);
-
-	printf("After(2)\n");
 
 	/* P(examine_exiting) after vessel has written its exit info in shared memory */
 	sem_post(examine_exiting);

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -41,8 +42,8 @@ int main(int argc, char *argv[]) {
 
 
 
-	memset(&sa, '\0', sizeof sa);
 	/* function to be executed when a SIGINT signal is caught, is sig_handler */
+	memset(&sa, '\0', sizeof sa);
 	sa.sa_handler = sig_handler;
 	/* block every other signal when running sig_handler */
 	sigfillset(&sa.sa_mask);
@@ -84,7 +85,7 @@ int main(int argc, char *argv[]) {
 
 
 	/* create shared memory segment */
-	shmid = shmget(IPC_PRIVATE, sizeof(SharedMemory) + s_cap * sizeof(small_spaces) + m_cap * sizeof(medium_spaces) + l_cap * sizeof(large_spaces) , 0666);
+	shmid = shmget(IPC_PRIVATE, sizeof(SharedMemory) + (s_cap + m_cap + l_cap) * sizeof(parking_spaces), 0666);
 	if(shmid ==  -1)  perror("shmget");
 
 
@@ -144,26 +145,25 @@ int main(int argc, char *argv[]) {
 	/* 3 struct arrays: each one represents the total number of parking spaces per type(Small, Medium, Large) */
 
 	SharedMemory *shm1 = (SharedMemory *)shared_mem;
+	shm1->array = (parking_spaces *) (shm1 + 1);
+	//shm1->array = (parking_spaces *) ( /*((uint8_t *)shared_mem)*/1 + (sizeof(SharedMemory)) );
 
-	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
 	for( i = 0; i < s_cap; i++) { 
-		shm1->s_array[i].space_type = small;
-		shm1->s_array[i].vessel_status = departed; /* in other words this parking space is empty */
-		shm1->s_array[i].cost = s_cost;
+		shm1->array[i].space_type = small;
+		shm1->array[i].vessel_status = departed; /* in other words this parking space is empty */
+		shm1->array[i].cost = s_cost;
 	}
 
-	shm1->m_array = (medium_spaces *) ( ((char *)shm1->s_array) + (s_cap * sizeof(small_spaces)) );
-	for( i = 0; i < m_cap; i++)  {
-		shm1->m_array[i].space_type = medium;
-		shm1->m_array[i].vessel_status = departed;
-		shm1->m_array[i].cost = m_cost;
+	for( i = s_cap; i < m_cap; i++)  {
+		shm1->array[i].space_type = medium;
+		shm1->array[i].vessel_status = departed;
+		shm1->array[i].cost = m_cost;
 	}
 
-	shm1->l_array = (large_spaces *) ( ((char *)shm1->m_array) + (m_cap * sizeof(medium_spaces)) );
-	for( i = 0; i < l_cap; i++)  {
-		shm1->l_array[i].space_type = large;
-		shm1->l_array[i].vessel_status = departed;
-		shm1->l_array[i].cost = l_cost;
+	for( i = m_cap; i < l_cap; i++)  {
+		shm1->array[i].space_type = large;
+		shm1->array[i].vessel_status = departed;
+		shm1->array[i].cost = l_cost;
 	}
 
 
@@ -203,7 +203,6 @@ int main(int argc, char *argv[]) {
 
 
 	initTime();	/* srand */
-
 
 
 	/********** Now create the different processes **********/

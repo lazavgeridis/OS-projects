@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/stat.h>
@@ -56,10 +57,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	shm1 = (SharedMemory *)shared_mem;
-	shm1->s_array = (small_spaces *) ( (char *)shared_mem + sizeof(SharedMemory) );
-	shm1->m_array = (medium_spaces *) ( (char *)shm1->s_array + shared_mem->s_capacity * sizeof(small_spaces) );
-	shm1->l_array = (large_spaces *) ( (char *)shm1->m_array + shared_mem->m_capacity * sizeof(medium_spaces) );
-
+	shm1->array = (parking_spaces *) (shm1 + 1);
+	//shm1->array = (parking_spaces *) ( /*((uint8_t *)shared_mem)*/1 + (sizeof(SharedMemory)) );
 
 
 	while(exit_signal == 0) {
@@ -70,24 +69,24 @@ int main(int argc, char *argv[]) {
 		sem_wait(mutex);
 			for(i = 0; i < shared_mem->s_capacity; i++) {
 
-				if(shm1->s_array[i].vessel_status == idle) 
-					fprintf(fp, "\nSmall Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->s_array[i].name, \
-													shm1->s_array[i].vessel_type, \
-													shm1->s_array[i].park_time);
+				if(shm1->array[i].vessel_status == idle) 
+					fprintf(fp, "\nSmall Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->array[i].name, \
+													shm1->array[i].vessel_type, \
+													shm1->array[i].park_time);
 			}
-			for(i = 0; i < shared_mem->m_capacity; i++) {
+			for(i = shared_mem->s_capacity; i < shared_mem->m_capacity; i++) {
 
-				if(shm1->m_array[i].vessel_status == idle) 
-					fprintf(fp, "\nMedium Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->m_array[i].name, \
-													shm1->m_array[i].vessel_type, \
-													shm1->m_array[i].park_time);
+				if(shm1->array[i].vessel_status == idle) 
+					fprintf(fp, "\nMedium Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->array[i].name, \
+													shm1->array[i].vessel_type, \
+													shm1->array[i].park_time);
 			}
-			for(i = 0; i < shared_mem->l_capacity; i++) {
+			for(i = shared_mem->m_capacity; i < shared_mem->l_capacity; i++) {
 
-				if(shm1->l_array[i].vessel_status == idle) 
-					fprintf(fp, "\nLarge Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->l_array[i].name, \
-													shm1->l_array[i].vessel_type, \
-													shm1->l_array[i].park_time);
+				if(shm1->array[i].vessel_status == idle) 
+					fprintf(fp, "\nLarge Space %d:\nVessel name:%s\nVessel Type:%d\nArrival Time:%ld\n", i + 1, shm1->array[i].name, \
+													shm1->array[i].vessel_type, \
+													shm1->array[i].park_time);
 			}
 			fflush(fp);
 		sem_post(mutex);

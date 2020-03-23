@@ -10,7 +10,7 @@ typedef enum {idle, departed} status;
 typedef enum {False, True} boolean;
 
 
-typedef struct small_spaces {
+typedef struct spaces {
 	char name[10];	
 	time_t park_time;
 	time_t depart_time;
@@ -18,27 +18,7 @@ typedef struct small_spaces {
 	type space_type;
 	type vessel_type;
 	status vessel_status;
-}small_spaces;
-
-typedef struct medium_spaces {
-	char name[10];	
-	time_t park_time;
-	time_t depart_time;
-	unsigned int cost;
-	type space_type;
-	type vessel_type;
-	status vessel_status;
-}medium_spaces;
-
-typedef struct large_spaces {
-	char name[10];	
-	time_t park_time;
-	time_t depart_time;
-	unsigned int cost;
-	type space_type;
-	type vessel_type;
-	status vessel_status;
-}large_spaces;
+}parking_spaces;
 
 typedef struct vessel_slot1 {
 	char name[10];	
@@ -61,10 +41,7 @@ typedef struct vessel_slot2 {
 typedef struct shared_memory {
 
 	/* each array represents a type of parking spaces(small, medium, large) */
-
-	small_spaces *s_array;				
-	medium_spaces *m_array;				
-	large_spaces *l_array;				
+	parking_spaces *array;
 
 	/* used for vessel-port master communication */	
 	int ready_to_enter;
