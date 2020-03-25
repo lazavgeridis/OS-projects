@@ -4,6 +4,6 @@
 
 **Project2**: Query execution on binary files of fixed length records and sorting of the search results
 
-**Project3**: Port/Harbor simulation using shared memory and posix semaphores
+**Project3**: Port/Harbor simulation using shared memory and posix semaphores (not working atm)
 
 **Project4**:
