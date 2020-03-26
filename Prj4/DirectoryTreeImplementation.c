@@ -454,10 +454,14 @@ void sync_directories(node **dir_s, node **dir_b, inode_entry **inotable_s, inod
                         /* for the next iteration */
                         pcrawl1 = pcrawl1->next_file_sibling;
 
-                        if(!pcrawl2->next_file_sibling)
-                            flag = 1;
-                        else
+                        if(pcrawl1 == NULL) 
                             pcrawl2 = pcrawl2->next_file_sibling;
+                        else{
+                            if(!pcrawl2->next_file_sibling)
+                                flag = 1;
+                            else
+                                pcrawl2 = pcrawl2->next_file_sibling;
+                        }
 
 					}
 					else {  /* the 2 files are not the same */

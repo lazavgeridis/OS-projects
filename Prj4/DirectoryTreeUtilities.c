@@ -540,6 +540,9 @@ int insert_file_entity(struct inotify_event *event, node **dir, inode_entry **in
 
 	int rv;
 
+    printf("Looking for %s\n", fullpath);
+    printf("Currently at %s\n", recpath);
+
 	/* we are inside the directory where the file node should be added */
 	if(strcmp(fullpath, recpath) == 0) {
 
@@ -604,7 +607,7 @@ int insert_dir_entity(struct inotify_event *event, node **dir, inode_entry **ino
 
         /* sorted insert ? */
         if( (*dir)->dir_children == 0 ) {
-		    (*dir)->list_of_file_children = newnode;	/* insert the new file treenode at the start of the file_children list */
+		    (*dir)->list_of_dir_children = newnode;	/* insert the new file treenode at the start of the file_children list */
         }
         else {
             node *first = (*dir)->list_of_dir_children;

@@ -79,23 +79,6 @@ int main(int argc, char *argv[]) {
 	sort_siblings(&root_backup);
 
 
-/*************************** testing *****************************/
-
-	/* print source and backup directories */
-	//print_directory_contents(root_source);
-	//putchar('\n');
-	//print_directory_contents(root_backup);
-
-	///* print source and backup inone tables */
-	//print_inotable(inode_table1);
-	//putchar('\n');
-	//print_inotable(inode_table2);
-
-	//putchar('\n');
-    //
-/*****************************************************************/
-
-
 	/******************* Synchronization Steps *********************/
 
 	path_source = (char *)malloc(strlen(root_source->name) + 1);    /* +1 for the '\0' */
@@ -119,17 +102,6 @@ int main(int argc, char *argv[]) {
 
 	printf("\n\n======================== Sync Step (a) - Done -  =============================\n\n");
 
-/****************************** testing ******************************/
-
-	/* print source and backup directories */
-	//print_directory_contents(root_source);
-	//putchar('\n');
-	//print_directory_contents(root_backup);
-
-	//print_inotable(inode_table1);
-	//putchar('\n');
-	//print_inotable(inode_table2);
-
 	free(path_source);
 	path_source = NULL;
 	
@@ -145,7 +117,7 @@ int main(int argc, char *argv[]) {
 
 
 	/* Now, start the 2nd sync step. 
-     * Add watch descriptors to each directory in Source 
+     * Add watch descriptors recursively to each directory in Source 
      */
 	watch_descriptor *wd_listhead = NULL;
 	add_watch_descriptors(&wd_listhead, inotify_fd, root_source, path_source, root_source->name); 
@@ -179,10 +151,11 @@ int main(int argc, char *argv[]) {
 			// deffer processing until next read completes
 			if( read_ptr + EVENT_SIZE + event->len > length ) 
 				break;
+
 			//event is fully received, process
 			printf("WD:%i %s %s %s COOKIE=%u\n", 
-				event->wd, event_name(event), 
-				target_type(event), target_name(event), event->cookie);
+			event->wd, event_name(event), 
+			target_type(event), target_name(event), event->cookie);
 			
 
 			/* ======================== examine type of event ============================ */
@@ -207,6 +180,8 @@ int main(int argc, char *argv[]) {
 					printf("\n----- IN_CREATE Event! -----\n");
 					in_create(event, inotify_fd, &wd_listhead, &root_source, &inode_table1, &root_backup, &inode_table2);
 					from_create = 1;
+                    if( (event->mask & IN_ISDIR) == 0)
+                        flag = 1;
 				}
 				no_create = 0;
 			}
@@ -215,6 +190,7 @@ int main(int argc, char *argv[]) {
 				if( (event->name[0] != '.') && (event->name[0] != '4') && (!from_create) && (event->name[strlen(event->name) - 1] != '~') ) {
 					printf("\n----- IN_ATTRIB Event! -----\n");
 					in_attrib(event, wd_listhead, &root_source, &inode_table1, &root_backup, &inode_table2, oldinode); /* ++++++++++++++ */
+                    //flag = 1;
 				}
 				//from_create = 0;
 			}
@@ -230,13 +206,15 @@ int main(int argc, char *argv[]) {
 						free(modified_name);
 						modified_name = NULL;
 					}
-					char *token = strtok(&event->name[1], delim);   /* acquire the original filename */
+					char *token = strtok(&event->name[1], delim);   /* acquire the original filename (use strtok on the string .filename.swp) */
 					modified_name = (char *)malloc(strlen(token) + 1);
 					strcpy(modified_name, token);
                     
                     /* get the i-node of the file that is currently being modified, since after the modification, the i-node changes */
-					if( ( oldinode = get_inode(event, wd_listhead, root_source->name, modified_name) ) != -1 ) 
+					if( ( oldinode = get_inode(event, wd_listhead, root_source->name, modified_name) ) != -1 ) {
+                        if(flag == 1) flag = 2;
 					    printf("Modifying file %s (i-node %d)\n", modified_name, oldinode);
+                    }
 				}
 			}
             
@@ -267,15 +245,10 @@ int main(int argc, char *argv[]) {
 
 			else if(event->mask & IN_MOVED_FROM) {
 				if( (event->name[0] != '.') && (event->name[0] != '4') && (event->name[strlen(event->name) - 1] != '~') ) {
-					if(modified_name != NULL) {
-                        printf("(IN_MOVED_FROM): Modified_name is %s\n", modified_name);
-						if(strcmp(event->name, modified_name) == 0) {
-							flag = 1;
-							no_create = 1;
-						}
-                    }
-					if(!flag) {
-						printf("\n----- IN_MOVED_FROM Event! -----\n");
+					//		flag = 1;
+					//		no_create = 1;
+					printf("\n----- IN_MOVED_FROM Event! -----\n");
+					if(flag != 2) {
 						/********** in_delete again ************/
 						in_delete(event, wd_listhead, &root_source, &inode_table1, &root_backup, &inode_table2);
 						moved_from = 1;
@@ -284,6 +257,7 @@ int main(int argc, char *argv[]) {
 						wd = event->wd;
 					}
 					flag = 0;
+                    no_create = 1;
 				}
 			}
 
@@ -310,6 +284,7 @@ int main(int argc, char *argv[]) {
 			//advance read_ptr to the beginning of the next event
 			read_ptr += EVENT_SIZE + event->len;
 		}
+
 		//check to see if a partial event remains at the end
 		if( read_ptr < length ) {
 			//copy the remaining bytes from the end of the buffer to the beginning of it
@@ -318,11 +293,14 @@ int main(int argc, char *argv[]) {
 			read_offset = length - read_ptr;
 		} else
 			read_offset = 0;
-	free(modified_name);
-    modified_name = NULL;
+
+	    free(modified_name);
+        modified_name = NULL;
 	}
 
-    if(modified_name) free(modified_name);
+    if(modified_name) 
+        free(modified_name);
+
     cleanup(&root_source, &root_backup, &inode_table1, &inode_table2, &wd_listhead, inotify_fd);
 	close(inotify_fd);
 	if(closedir(dir_ptr1) < 0) perror("closedir");
