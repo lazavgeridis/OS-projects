@@ -6,4 +6,4 @@
 
 **Project3**: Port/Harbor simulation using shared memory and posix semaphores (not working atm)
 
-**Project4**:
+**Project4**: Dynamic monitoring of file and directory hierarchy structure
