@@ -7,14 +7,14 @@ The inode (index node) is a data structure in the Linux operating system that de
 
 During the initial synchronization, the directory structure of the **source** directory gets reflected on the specified **backup** directory. At the end of this step, the 2 hierarchies will be identical.  
 At the second step, we initiate the monitoring of the directories under the source directory (including source). The inotify events of interest are the following:  
-1. **IN_CREATE**
-2. **IN_ATTRIB**
-3. **IN_MODIFY**
-4. **IN_CLOSE_WRITE**
-5. **IN_DELETE**
-6. **IN_DELETE_SELF**
-7. **IN_MOVED_FROM**
-8. **IN_MOVED_TO**
+1. **IN_CREATE** (create a file or a directory)
+2. **IN_ATTRIB** (file's last date of modification has changed)
+3. **IN_MODIFY** (file was modified)
+4. **IN_CLOSE_WRITE** (file was written)
+5. **IN_DELETE** (file was deleted - *rm* command)
+6. **IN_DELETE_SELF** (directory was deleted - *rmdir* command)
+7. **IN_MOVED_FROM** (file was moved outside of the monitored catalog - either *mv* command or delete from keyboard)
+8. **IN_MOVED_TO** (file was moved/introduced within the monitored hierarchy)
 
 ## Execution 
 
