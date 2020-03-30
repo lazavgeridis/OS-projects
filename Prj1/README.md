@@ -13,6 +13,8 @@ resembles the transaction amount between the 2 nodes. Basically, these transacti
 There could be one or more transactions between the same 2 nodes with either the same or different weight. Of course, the
 size of the graph can change dynamically.  
 
+![Screenshot](transactions_graph.png)
+
 ###### examples
 "Bob"->1500->"Liz"(1): transaction between bucket node "Bob" and adjacent node "Liz" with weight 1500  
 "Bob"->700->"Liz" could also exist and even  
