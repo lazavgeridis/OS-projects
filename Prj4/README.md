@@ -14,7 +14,9 @@ At the second step, we initiate the monitoring of the directories under the sour
 5. **IN_DELETE** (file was deleted - *rm* command)
 6. **IN_DELETE_SELF** (directory was deleted - *rmdir* command)
 7. **IN_MOVED_FROM** (file was moved outside of the monitored catalog - either *mv* command or delete from keyboard)
-8. **IN_MOVED_TO** (file was moved/introduced within the monitored hierarchy)
+8. **IN_MOVED_TO** (file was moved/introduced within the monitored hierarchy)  
+
+Each of the following events will be reflected on the backup directory as well.
 
 ## Execution 
 
