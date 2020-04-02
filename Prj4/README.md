@@ -16,7 +16,7 @@ At the second step, we initiate the monitoring of the directories under the sour
 7. **IN_MOVED_FROM** (file was moved outside of the monitored catalog - either *mv* command or delete from keyboard)
 8. **IN_MOVED_TO** (file was moved/introduced within the monitored hierarchy)  
 
-Each of the following events will be reflected on the backup directory as well.
+Each of the above-mentioned events will be reflected on the backup directory as well.
 
 ## Execution 
 
@@ -24,4 +24,6 @@ Each of the following events will be reflected on the backup directory as well.
 $ make  
 $ ./mirr <source_directory> <backup_directory> 
 
-```
+```  
+
+
